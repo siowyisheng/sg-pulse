@@ -34,3 +34,26 @@ export async function undoUpvoteFromMyFeelingsAction(): Promise<void> {
   await undoUpvoteAction();
   revalidatePath("/me");
 }
+
+export async function reportAction(feelingId: string): Promise<Outcome> {
+  const me = await currentMe();
+  if (!me) return { message: "Please log in again." };
+  try {
+    await me.report(feelingId);
+  } catch (error) {
+    return { message: messageOf(error) };
+  }
+  return {};
+}
+
+/** An Admin's Take-down of a Candidate, from the Hashtag screen. */
+export async function takeDownCandidateAction(feelingId: string): Promise<Outcome> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return { message: "This is for Admins only." };
+  try {
+    await me.asAdmin().takeDown(feelingId);
+  } catch (error) {
+    return { message: messageOf(error) };
+  }
+  return {};
+}

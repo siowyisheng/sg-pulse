@@ -206,7 +206,7 @@ describe("Carry-over", () => {
     const world = await createTestApp({ now: MORNING });
     await world.app.operator.scheduleSeedFeeling({ cycle: "2026-11-12", polarity: "good", text: "Seed", hashtag: "seed" });
     world.clock.set("2026-11-13T00:00:00+08:00");
-    expect((await world.app.feelingsOfTheDay()).good).toEqual({ polarity: "good", text: "Seed", hashtag: "seed", fromTheTeam: true, byline: null, yahLahs: null, carriedOver: true });
+    expect((await world.app.feelingsOfTheDay()).good).toMatchObject({ polarity: "good", text: "Seed", hashtag: "seed", fromTheTeam: true, byline: null, yahLahs: null, carriedOver: true });
   });
 
   it("has nothing to carry on the very first day", async () => {

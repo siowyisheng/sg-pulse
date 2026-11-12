@@ -1,13 +1,13 @@
 import { Frown, Plus, Smile } from "lucide-react";
 import type { FeelingOfTheDay } from "@/core/app";
-import { bylineText } from "@/core/byline";
 import type { Polarity } from "@/core/feeling-rules";
 import { getApp } from "@/composition";
 import { AdSlot } from "@/ui/ad-slot";
-import { BylineChip, FromTheTeamChip, PolarityBadge, StillFeelingItChip } from "@/ui/badges";
+import { PolarityBadge } from "@/ui/badges";
+import { PublishedFeelingBody } from "@/ui/published-feeling";
 import { Card } from "@/ui/card";
 import { commercialSettings } from "@/web/commercial";
-import { formatCycle, yahLahs } from "@/web/format";
+import { formatCycle } from "@/web/format";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
 
@@ -21,16 +21,7 @@ function Feeling({ polarity, feeling }: { polarity: Polarity; feeling: FeelingOf
         <PolarityBadge polarity={polarity} /> Feeling of the Day
       </h2>
       {feeling ? (
-        <>
-          <p className="feeling-text">{feeling.text}</p>
-          <p className="feeling-meta">
-            <span className={`hashtag hashtag-${polarity}`}>#{feeling.hashtag}</span>
-            {feeling.fromTheTeam && <FromTheTeamChip />}
-            {feeling.byline && <BylineChip>{bylineText(feeling.byline)}</BylineChip>}
-            {feeling.carriedOver && <StillFeelingItChip />}
-          </p>
-          {feeling.yahLahs !== null && <p className="caption muted">{yahLahs(feeling.yahLahs)}</p>}
-        </>
+        <PublishedFeelingBody feeling={feeling} carriedOver={feeling.carriedOver} size="large" />
       ) : (
         <p className="muted">Nothing here today.</p>
       )}
@@ -46,9 +37,14 @@ export default async function Home() {
   return (
     <div className="snap-page">
       <main className="first-screen">
-        <h1 className="today">
-          How Singapore is feeling <time dateTime={today.cycle}>{formatCycle(today.cycle)}</time>
-        </h1>
+        <div className="feeling-meta spread">
+          <h1 className="today">
+            How Singapore is feeling <time dateTime={today.cycle}>{formatCycle(today.cycle)}</time>
+          </h1>
+          <a className="today" href="/archive">
+            Earlier days
+          </a>
+        </div>
         <Feeling polarity="good" feeling={today.good} />
         <Feeling polarity="bad" feeling={today.bad} />
         {/* The ad sits below both Feelings, never between or above them. */}

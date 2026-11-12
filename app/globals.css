@@ -813,3 +813,61 @@ html:has(.snap-page) .demo-banner {
 .modal .stack {
   width: 100%;
 }
+
+/* Published Feelings: the archive, share pages, correction notices */
+
+.spread {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.edged {
+  border-left-width: 6px;
+  border-left-style: solid;
+}
+
+.day-heading {
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h3-weight);
+  line-height: var(--type-h3-line);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-button);
+  background: var(--color-warning-tint);
+  color: var(--color-ink);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line);
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* A small button that doesn't ask for attention: share, report. */
+.quiet-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-sm);
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-family: inherit;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+  cursor: pointer;
+}
+
+a.button {
+  text-decoration: none;
+}

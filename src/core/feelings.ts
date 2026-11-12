@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sql, type SQL } from "drizzle-orm";
 import type { Db } from "@/db";
 import { schema } from "@/db";
 import { bylineOf, type Byline } from "./byline";
@@ -9,8 +9,11 @@ import { normalisedHashtag, refuseLinks, validPolarity, validText, type Polarity
 import type { Clock, Random } from "./ports";
 import { isProfane } from "./profanity";
 
-/** A Feeling of the Day as a Visitor sees it. */
-export interface FeelingOfTheDay {
+/** A Feeling that has been a Feeling of the Day, as anyone sees it: on the front page, in the archive, on its share page. */
+export interface PublishedFeeling {
+  id: string;
+  /** The day it became the Feeling of the Day. */
+  cycle: Cycle;
   polarity: Polarity;
   text: string;
   /** Without the "#". */
@@ -21,8 +24,21 @@ export interface FeelingOfTheDay {
   byline: Byline | null;
   /** How many said Yah Lah to it in the Cycle it won: final, and shown only now that it has won. Null for a Seed Feeling. */
   yahLahs: number | null;
+  /** A notice the Admin has attached to it, if any. */
+  correctionNotice: string | null;
+}
+
+/** A Feeling of the Day as a Visitor sees it. */
+export interface FeelingOfTheDay extends PublishedFeeling {
   /** A Carry-over: nothing was approved for today, so an earlier day's Feeling is "still feeling it". */
   carriedOver: boolean;
+}
+
+/** All a share preview may show: never the Byline or a count. */
+export interface SharePreview {
+  text: string;
+  hashtag: string;
+  polarity: Polarity;
 }
 
 export interface FeelingsOfTheDay {
@@ -57,9 +73,10 @@ export interface FeelingInput {
 
 /**
  * Where a Submitter's Feeling stands: queued for a Cycle that hasn't started, a Candidate of the
- * Cycle under way, a winner (a Feeling of the Day), or expired with its Cycle.
+ * Cycle under way, hidden while a Report on it is under review, removed by an Admin, a winner (a
+ * Feeling of the Day), or expired with its Cycle.
  */
-export type FeelingState = "queued" | "candidate" | "expired" | "winner";
+export type FeelingState = "queued" | "candidate" | "under-review" | "removed" | "expired" | "winner";
 
 /** A Feeling as its own Submitter sees it. */
 export interface MyFeeling {
@@ -137,12 +154,50 @@ export interface ApprovalChoices {
 
 export { CANDIDATES_SHOWN };
 const CLOUD_SIZES = 5;
+const ARCHIVE_DAYS_PER_PAGE = 14;
 const CHOICES_OFFERED = 3;
 
 const POLARITY_WORDS = { good: "Good", bad: "Bad" } as const;
 
 export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; random: Random }) {
   const today = () => cycleOf(clock.now());
+
+  /** What makes a Feeling a Candidate anyone can see: written by a User for this Cycle, not removed, and not under review. */
+  const inPool = (cycle: Cycle) =>
+    and(eq(schema.feelings.cycle, cycle), isNotNull(schema.feelings.submitterId), isNull(schema.feelings.removedAt), isNull(schema.feelings.reportedAt));
+
+  /** Feelings of the Day matching a condition, newest day first and Good before Bad, as anyone sees them. */
+  async function published(condition: SQL | undefined, now: Date): Promise<PublishedFeeling[]> {
+    const rows = await db
+      .select({
+        id: schema.feelings.id,
+        cycle: schema.feelingsOfTheDay.cycle,
+        polarity: schema.feelingsOfTheDay.polarity,
+        text: schema.feelings.text,
+        hashtag: schema.feelings.hashtag,
+        fromTheTeam: schema.feelings.seed,
+        correctionNotice: schema.feelings.correctionNotice,
+        submitter: schema.users,
+      })
+      .from(schema.feelingsOfTheDay)
+      .innerJoin(schema.feelings, eq(schema.feelings.id, schema.feelingsOfTheDay.feelingId))
+      .leftJoin(schema.users, eq(schema.users.id, schema.feelings.submitterId))
+      .where(and(condition, isNull(schema.feelings.removedAt)))
+      .orderBy(desc(schema.feelingsOfTheDay.cycle), asc(schema.feelingsOfTheDay.polarity));
+    const counted =
+      rows.length === 0
+        ? []
+        : await db
+            .select({ feelingId: schema.upvotes.feelingId, yahLahs: count() })
+            .from(schema.upvotes)
+            .where(inArray(schema.upvotes.feelingId, rows.map((row) => row.id)))
+            .groupBy(schema.upvotes.feelingId);
+    return rows.map(({ submitter, ...row }) => ({
+      ...row,
+      byline: submitter ? bylineOf(submitter, now) : null,
+      yahLahs: submitter ? (counted.find((found) => found.feelingId === row.id)?.yahLahs ?? 0) : null,
+    }));
+  }
 
   /** The Cycle's Candidates for a Polarity (and Hashtag, if given), each with its Submitter and its Upvotes so far. */
   async function candidatesWithUpvotes(now: Date, polarity: Polarity, hashtag?: string) {
@@ -162,7 +217,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
       .from(schema.feelings)
       .innerJoin(schema.users, eq(schema.users.id, schema.feelings.submitterId))
       .leftJoin(schema.upvotes, eq(schema.upvotes.feelingId, schema.feelings.id))
-      .where(and(eq(schema.feelings.cycle, cycleOf(now)), eq(schema.feelings.polarity, polarity), hashtag === undefined ? undefined : eq(schema.feelings.hashtag, hashtag)))
+      .where(and(inPool(cycleOf(now)), eq(schema.feelings.polarity, polarity), hashtag === undefined ? undefined : eq(schema.feelings.hashtag, hashtag)))
       .groupBy(schema.feelings.id, schema.users.id)
       // A steady order to start from, so a jumble depends on the dice alone.
       .orderBy(asc(schema.feelings.createdAt), asc(schema.feelings.id));
@@ -188,43 +243,49 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
     async ofTheDay(): Promise<FeelingsOfTheDay> {
       const now = clock.now();
       const cycle = cycleOf(now);
-      const rows = await db
-        .selectDistinctOn([schema.feelingsOfTheDay.polarity], {
-          id: schema.feelings.id,
-          polarity: schema.feelingsOfTheDay.polarity,
-          chosenFor: schema.feelingsOfTheDay.cycle,
-          text: schema.feelings.text,
-          hashtag: schema.feelings.hashtag,
-          fromTheTeam: schema.feelings.seed,
-          submitter: schema.users,
-        })
-        .from(schema.feelingsOfTheDay)
-        .innerJoin(schema.feelings, eq(schema.feelings.id, schema.feelingsOfTheDay.feelingId))
-        .leftJoin(schema.users, eq(schema.users.id, schema.feelings.submitterId))
-        .where(lte(schema.feelingsOfTheDay.cycle, cycle))
-        .orderBy(schema.feelingsOfTheDay.polarity, desc(schema.feelingsOfTheDay.cycle));
-      const counted =
-        rows.length === 0
-          ? []
-          : await db
-              .select({ feelingId: schema.upvotes.feelingId, yahLahs: count() })
-              .from(schema.upvotes)
-              .where(inArray(schema.upvotes.feelingId, rows.map((row) => row.id)))
-              .groupBy(schema.upvotes.feelingId);
+      const latest = (polarity: Polarity) =>
+        db
+          .select({ cycle: sql<string>`max(${schema.feelingsOfTheDay.cycle})` })
+          .from(schema.feelingsOfTheDay)
+          .where(and(eq(schema.feelingsOfTheDay.polarity, polarity), lte(schema.feelingsOfTheDay.cycle, cycle)));
+      const current = await published(
+        sql`(${schema.feelingsOfTheDay.polarity} = 'good' AND ${schema.feelingsOfTheDay.cycle} = (${latest("good")})) OR (${schema.feelingsOfTheDay.polarity} = 'bad' AND ${schema.feelingsOfTheDay.cycle} = (${latest("bad")}))`,
+        now,
+      );
       const of = (polarity: Polarity): FeelingOfTheDay | null => {
-        const row = rows.find((found) => found.polarity === polarity);
-        if (!row) return null;
-        return {
-          polarity,
-          text: row.text,
-          hashtag: row.hashtag,
-          fromTheTeam: row.fromTheTeam,
-          byline: row.submitter ? bylineOf(row.submitter, now) : null,
-          yahLahs: row.submitter ? (counted.find((found) => found.feelingId === row.id)?.yahLahs ?? 0) : null,
-          carriedOver: row.chosenFor !== cycle,
-        };
+        const feeling = current.find((found) => found.polarity === polarity);
+        return feeling ? { ...feeling, carriedOver: feeling.cycle !== cycle } : null;
       };
       return { cycle, good: of("good"), bad: of("bad") };
+    },
+
+    /**
+     * Past Feelings of the Day, newest day first and Good before Bad: `days` days of them, from before
+     * `before` (or before today). Each Feeling is listed once, on the day it was chosen.
+     */
+    async archive(page: { before?: string; days?: number } = {}): Promise<PublishedFeeling[]> {
+      const now = clock.now();
+      const before = page.before === undefined ? cycleOf(now) : page.before;
+      if (!isCycle(before)) return [];
+      const until = before < cycleOf(now) ? before : cycleOf(now);
+      const days = Math.min(Math.max(1, Math.floor(page.days ?? ARCHIVE_DAYS_PER_PAGE)), 60);
+      const shown = await db
+        .selectDistinct({ cycle: schema.feelingsOfTheDay.cycle })
+        .from(schema.feelingsOfTheDay)
+        .innerJoin(schema.feelings, eq(schema.feelings.id, schema.feelingsOfTheDay.feelingId))
+        .where(and(lt(schema.feelingsOfTheDay.cycle, until), isNull(schema.feelings.removedAt)))
+        .orderBy(desc(schema.feelingsOfTheDay.cycle))
+        .limit(days);
+      if (shown.length === 0) return [];
+      return published(inArray(schema.feelingsOfTheDay.cycle, shown.map((row) => row.cycle)), now);
+    },
+
+    /** The Feeling of the Day chosen for a day and Polarity, once it has gone live. Candidates and Approvals not yet live are nobody's to see. */
+    async publishedOn(cycle: string, polarity: Polarity): Promise<PublishedFeeling | null> {
+      const now = clock.now();
+      if (!isCycle(cycle) || cycle > cycleOf(now) || (polarity !== "good" && polarity !== "bad")) return null;
+      const [feeling] = await published(and(eq(schema.feelingsOfTheDay.cycle, cycle), eq(schema.feelingsOfTheDay.polarity, polarity)), now);
+      return feeling ?? null;
     },
 
     /** What the Admin approves from right now. */
@@ -315,7 +376,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
         .from(schema.feelingsOfTheDay)
         .innerJoin(schema.feelings, eq(schema.feelings.id, schema.feelingsOfTheDay.feelingId))
         .where(and(gte(schema.feelingsOfTheDay.cycle, cycle), eq(schema.feelings.seed, true)))
-        .orderBy(asc(schema.feelingsOfTheDay.cycle), desc(schema.feelingsOfTheDay.polarity));
+        .orderBy(asc(schema.feelingsOfTheDay.cycle), asc(schema.feelingsOfTheDay.polarity));
       return rows.map((row) => ({ ...row, live: row.cycle === cycle }));
     },
 
@@ -383,13 +444,19 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
           hashtag: schema.feelings.hashtag,
           cycle: schema.feelings.cycle,
           wonCycle: schema.feelingsOfTheDay.cycle,
+          reportedAt: schema.feelings.reportedAt,
+          removedAt: schema.feelings.removedAt,
         })
         .from(schema.feelings)
         .leftJoin(schema.feelingsOfTheDay, eq(schema.feelingsOfTheDay.feelingId, schema.feelings.id))
         .where(and(eq(schema.feelings.submitterId, userId), isNotNull(schema.feelings.cycle)))
         .orderBy(desc(schema.feelings.cycle));
       // An Approval is nobody's business until it goes live.
-      return rows.map(({ wonCycle, cycle, ...feeling }) => ({ ...feeling, cycle: cycle!, state: stateOf(cycle!, wonCycle !== null && wonCycle <= today()) }));
+      return rows.map(({ wonCycle, cycle, reportedAt, removedAt, ...feeling }) => {
+        const state = removedAt ? "removed" : stateOf(cycle!, wonCycle !== null && wonCycle <= today());
+        // Under review only matters while its Cycle is still open; after that it has simply expired.
+        return { ...feeling, cycle: cycle!, state: reportedAt && !removedAt && (state === "candidate" || state === "queued") ? "under-review" : state };
+      });
     },
 
     /** The Hashtags of the Cycle under way, most used first. Queued Feelings don't count until their Cycle starts. */
@@ -398,7 +465,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
       const rows = await db
         .select({ hashtag: schema.feelings.hashtag, uses })
         .from(schema.feelings)
-        .where(and(eq(schema.feelings.cycle, today()), isNotNull(schema.feelings.submitterId)))
+        .where(inPool(today()))
         .groupBy(schema.feelings.hashtag)
         .orderBy(desc(uses), asc(schema.feelings.hashtag));
       return rows.map((row) => row.hashtag);
@@ -414,7 +481,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
       const rows = await db
         .select({ hashtag: schema.feelings.hashtag, feelings: uses })
         .from(schema.feelings)
-        .where(and(eq(schema.feelings.cycle, today()), eq(schema.feelings.polarity, polarity), isNotNull(schema.feelings.submitterId)))
+        .where(and(inPool(today()), eq(schema.feelings.polarity, polarity)))
         .groupBy(schema.feelings.hashtag)
         .orderBy(desc(uses), asc(schema.feelings.hashtag));
       const most = rows[0]?.feelings ?? 0;
@@ -458,6 +525,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
           FROM ${schema.feelings} AS feeling
           WHERE feeling.id = ${feelingId}::uuid AND feeling.cycle = ${cycle}::date
             AND feeling.submitter_id IS NOT NULL AND feeling.submitter_id <> ${userId}::uuid
+            AND feeling.removed_at IS NULL AND feeling.reported_at IS NULL
           ON CONFLICT (user_id, cycle) DO UPDATE SET feeling_id = EXCLUDED.feeling_id, cast_at = EXCLUDED.cast_at
             WHERE upvote.feeling_id <> EXCLUDED.feeling_id
           RETURNING feeling_id
@@ -492,7 +560,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
         .select({ feelingId: schema.feelings.id, text: schema.feelings.text, polarity: schema.feelings.polarity, hashtag: schema.feelings.hashtag })
         .from(schema.upvotes)
         .innerJoin(schema.feelings, eq(schema.feelings.id, schema.upvotes.feelingId))
-        .where(and(eq(schema.upvotes.userId, userId), eq(schema.upvotes.cycle, today())));
+        .where(and(eq(schema.upvotes.userId, userId), eq(schema.upvotes.cycle, today()), isNull(schema.feelings.removedAt)));
       return mine ?? null;
     },
 

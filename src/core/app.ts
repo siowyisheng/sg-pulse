@@ -4,14 +4,16 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
-import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
+import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
+import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type PublishedFeeling, type ScheduledSeedFeeling, type SharePreview, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
 import type { Clock, Random, Singpass, WebPush, WebPushSubscription } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
 export type { Session };
-export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+export type { AuditEntry, ReportedFeeling } from "./moderation";
+export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFeeling, SharePreview, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -27,6 +29,16 @@ export interface Admin {
   approve(feelingId: string): Promise<void>;
   /** Takes back tomorrow's Approval for a Polarity. */
   withdrawApproval(polarity: Polarity): Promise<void>;
+  /** The queue of Feelings with an open Report, oldest first. */
+  reports(): Promise<ReportedFeeling[]>;
+  /** Finds a Reported Feeling innocent: it returns to the pool, and the reporter is timed out from Reporting (a week by default; 0 waives it). */
+  clearReport(feelingId: string, options?: { timeoutDays?: number }): Promise<void>;
+  /** Take-down: removes a Candidate or a published Feeling for good. The next most-upvoted, or the Carry-over, takes a published one's place. */
+  takeDown(feelingId: string): Promise<void>;
+  /** Attaches a correction notice to a Feeling, shown wherever it is published. An empty notice lifts it. */
+  setCorrectionNotice(feelingId: string, notice: string): Promise<void>;
+  /** The newest entries of the record of Reports and Admin actions. */
+  auditLog(): Promise<AuditEntry[]>;
 }
 
 export interface AppDeps {
@@ -64,6 +76,10 @@ export interface Me {
   undoUpvote(): Promise<void>;
   /** The Candidate holding their Upvote in the Cycle under way, if any. */
   myUpvote(): Promise<MyUpvote | null>;
+  /** Reports a Candidate: it is hidden at once and queued for an Admin. */
+  report(feelingId: string): Promise<void>;
+  /** A Timeout: until then they can't Report (everything else still works). Null when they can. */
+  reportingTimedOutUntil: Date | null;
   /** Lets this browser receive pushes for them. Saving the same browser again changes nothing. */
   subscribeToPush(subscription: WebPushSubscription): Promise<void>;
 }
@@ -79,14 +95,34 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
   const logins = createSingpassLogins({ db, clock, singpass });
   const feelings = createFeelings({ db, clock, random });
 
-  const admin: Admin = {
-    scheduleSeedFeeling: (input) => feelings.scheduleSeed(input),
+  const moderation = createModeration({ db, clock });
+
+  /** The Admin area, with everything done there recorded against the Admin who did it. */
+  const adminFor = (adminId: string): Admin => ({
+    async scheduleSeedFeeling(input) {
+      await feelings.scheduleSeed(input);
+      await moderation.record(adminId, "seed-scheduled", null, `${input.cycle} ${input.polarity}: ${input.text}`);
+    },
     scheduledSeedFeelings: () => feelings.scheduledSeeds(),
-    unscheduleSeedFeeling: (input) => feelings.unscheduleSeed(input),
+    async unscheduleSeedFeeling(input) {
+      await feelings.unscheduleSeed(input);
+      await moderation.record(adminId, "seed-unscheduled", null, `${input.cycle} ${input.polarity}`);
+    },
     approvalChoices: () => feelings.approvalChoices(),
-    approve: (feelingId) => feelings.approve(feelingId),
-    withdrawApproval: (polarity) => feelings.withdrawApproval(polarity),
-  };
+    async approve(feelingId) {
+      await feelings.approve(feelingId);
+      await moderation.record(adminId, "approve", feelingId);
+    },
+    async withdrawApproval(polarity) {
+      await feelings.withdrawApproval(polarity);
+      await moderation.record(adminId, "approval-withdrawn", null, polarity);
+    },
+    reports: () => moderation.reports(),
+    clearReport: (feelingId, options) => moderation.clearReport(adminId, feelingId, options),
+    takeDown: (feelingId) => moderation.takeDown(adminId, feelingId),
+    setCorrectionNotice: (feelingId, notice) => moderation.setCorrectionNotice(adminId, feelingId, notice),
+    auditLog: () => moderation.auditLog(),
+  });
 
   return {
     /** Starts a Singpass login: send the browser to `url`, and have it keep `state` for the way back. */
@@ -137,7 +173,7 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
         isAdmin,
         asAdmin() {
           if (!isAdmin) throw new AdminError("NOT_ADMIN", "This is for Admins only.");
-          return admin;
+          return adminFor(userId);
         },
         submission: () => feelings.submission(userId),
         submitFeeling: (input) => feelings.submit(userId, input),
@@ -149,6 +185,8 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
         upvote: (feelingId) => feelings.upvote(userId, feelingId),
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
+        report: (feelingId) => moderation.report(visit.user, feelingId),
+        reportingTimedOutUntil: visit.user.reportingTimedOutUntil && visit.user.reportingTimedOutUntil > clock.now() ? visit.user.reportingTimedOutUntil : null,
         async subscribeToPush(subscription) {
           const { endpoint, p256dh, auth } = subscription;
           await db
@@ -166,6 +204,18 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
 
     /** The Feelings of the Day for the Cycle it is right now in Singapore. Open to any Visitor. */
     feelingsOfTheDay: (): Promise<FeelingsOfTheDay> => feelings.ofTheDay(),
+
+    /** Past Feelings of the Day, newest day first, a page of days at a time. Open to any Visitor. */
+    archive: (page?: { before?: string; days?: number }): Promise<PublishedFeeling[]> => feelings.archive(page),
+
+    /** The Feeling of the Day chosen for a day and Polarity, once it has gone live: what a share link opens. Open to any Visitor. */
+    published: (cycle: string, polarity: Polarity): Promise<PublishedFeeling | null> => feelings.publishedOn(cycle, polarity),
+
+    /** What a share link's preview image may show: the text, Hashtag and Polarity, and nothing about who wrote it. */
+    async sharePreview(cycle: string, polarity: Polarity): Promise<SharePreview | null> {
+      const feeling = await feelings.publishedOn(cycle, polarity);
+      return feeling ? { text: feeling.text, hashtag: feeling.hashtag, polarity: feeling.polarity } : null;
+    },
 
     /** A Polarity's word cloud for the Cycle under way. Open to any Visitor. */
     wordCloud: (polarity: Polarity): Promise<CloudWord[]> => feelings.wordCloud(polarity),
