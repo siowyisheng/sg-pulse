@@ -4,6 +4,7 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
+import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
 import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type PublishedFeeling, type ScheduledSeedFeeling, type SharePreview, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
@@ -37,7 +38,9 @@ export interface Admin {
   takeDown(feelingId: string): Promise<void>;
   /** Attaches a correction notice to a Feeling, shown wherever it is published. An empty notice lifts it. */
   setCorrectionNotice(feelingId: string, notice: string): Promise<void>;
-  /** The newest entries of the record of Reports and Admin actions. */
+  /** Users' requests for a published winner to be removed that are still waiting, the oldest first. Taking the Feeling down settles its request. */
+  removalRequests(): Promise<RemovalRequest[]>;
+  /** The newest entries of the record of submissions, Reports and Admin actions. */
   auditLog(): Promise<AuditEntry[]>;
 }
 
@@ -80,6 +83,10 @@ export interface Me {
   report(feelingId: string): Promise<void>;
   /** A Timeout: until then they can't Report (everything else still works). Null when they can. */
   reportingTimedOutUntil: Date | null;
+  /** Asks for a Feeling of theirs that has been a Feeling of the Day to be removed, archive entry included. The Admin has a day to honour it. */
+  requestRemoval(feelingId: string): Promise<void>;
+  /** Deletes their account and what is held about them. A Feeling of the Day of theirs stays, with its Byline, until removal is asked for; `alsoRemoveWinners` asks for that on all of them at once, so nothing is left to ask for once they have no account. Their session ends with it. */
+  deleteAccount(options?: { alsoRemoveWinners?: boolean }): Promise<void>;
   /** Lets this browser receive pushes for them. Saving the same browser again changes nothing. */
   subscribeToPush(subscription: WebPushSubscription): Promise<void>;
 }
@@ -96,6 +103,7 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
   const feelings = createFeelings({ db, clock, random });
 
   const moderation = createModeration({ db, clock });
+  const privacy = createPrivacy({ db, clock });
 
   /** The Admin area, with everything done there recorded against the Admin who did it. */
   const adminFor = (adminId: string): Admin => ({
@@ -121,6 +129,7 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
     clearReport: (feelingId, options) => moderation.clearReport(adminId, feelingId, options),
     takeDown: (feelingId) => moderation.takeDown(adminId, feelingId),
     setCorrectionNotice: (feelingId, notice) => moderation.setCorrectionNotice(adminId, feelingId, notice),
+    removalRequests: () => privacy.removalRequests(),
     auditLog: () => moderation.auditLog(),
   });
 
@@ -176,7 +185,11 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
           return adminFor(userId);
         },
         submission: () => feelings.submission(userId),
-        submitFeeling: (input) => feelings.submit(userId, input),
+        async submitFeeling(input) {
+          const submitted = await feelings.submit(userId, input);
+          await moderation.record(userId, "submit", null, `${submitted.cycle} ${submitted.polarity}`);
+          return submitted;
+        },
         myFeelings: () => feelings.mine(userId),
         async candidates(input) {
           const [shown, upvote] = await Promise.all([feelings.candidates(input), feelings.myUpvote(userId)]);
@@ -186,6 +199,15 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
         report: (feelingId) => moderation.report(visit.user, feelingId),
+        requestRemoval: (feelingId) => privacy.requestRemoval(userId, feelingId),
+        async deleteAccount(options) {
+          if (options?.alsoRemoveWinners) {
+            for (const feeling of await feelings.mine(userId)) {
+              if (feeling.state === "winner" && !feeling.removalRequested) await privacy.requestRemoval(userId, feeling.id);
+            }
+          }
+          await privacy.deleteAccount(userId);
+        },
         reportingTimedOutUntil: visit.user.reportingTimedOutUntil && visit.user.reportingTimedOutUntil > clock.now() ? visit.user.reportingTimedOutUntil : null,
         async subscribeToPush(subscription) {
           const { endpoint, p256dh, auth } = subscription;
@@ -295,6 +317,9 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
         }
         return { sent };
       },
+
+      /** Removes what the record of submissions, Reports and Admin actions holds of more than a year ago. Run by the morning job. */
+      purgeOldLogs: () => privacy.purgeOldLogs(),
 
       /** Every User, by Byline, to find the one to make an Admin. */
       async listUsers(): Promise<{ userId: string; byline: string; isAdmin: boolean; joinedAt: Date }[]> {

@@ -547,6 +547,17 @@ ul.stack li {
   resize: vertical;
 }
 
+.check-field {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.check-field input {
+  margin-top: var(--space-xs);
+  flex: none;
+}
+
 .field-note {
   color: var(--color-ink-muted);
   font-weight: var(--type-caption-weight);

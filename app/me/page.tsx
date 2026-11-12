@@ -11,6 +11,7 @@ import { currentMe } from "@/web/session";
 import { signOutAction } from "../auth-actions";
 import { becomeAdminInDemoAction } from "../demo/actions";
 import { undoUpvoteFromMyFeelingsAction } from "../feelings/actions";
+import { requestRemovalAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "My Feelings · Yah Lah" };
@@ -95,6 +96,16 @@ export default async function MyFeelings() {
           </p>
           <p>{feeling.text}</p>
           <p className={`hashtag hashtag-${feeling.polarity}`}>#{feeling.hashtag}</p>
+          {feeling.state === "winner" &&
+            (feeling.removalRequested ? (
+              <p className="caption muted">You&apos;ve asked for this to be removed. It will be, within 24 hours.</p>
+            ) : (
+              <form action={requestRemovalAction.bind(null, feeling.id)}>
+                <Button variant="ghost" type="submit">
+                  Ask for removal
+                </Button>
+              </form>
+            ))}
         </Card>
       ))}
       <form className="actions" action={signOutAction}>
@@ -107,6 +118,9 @@ export default async function MyFeelings() {
           </Button>
         )}
       </form>
+      <p>
+        <a href="/me/delete">Delete my account</a>
+      </p>
     </main>
   );
 }

@@ -2,11 +2,11 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 13 Nov 2026, after tickets #2, #5 to #15, #17 and #20. #16 (Election Mode) is deferred.
+Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Election Mode) is deferred.
 
 ## After every push that changes the database
 
-- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0005_moderation.sql` (tickets #14, #15 and #17): until it is run, the front page and most other pages fail on the live site.
+- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0005_moderation.sql` (tickets #14, #15 and #17), `drizzle/0006_daily_push.sql` (#19) and `drizzle/0007_removal_and_deletion.sql` (#18): run it once and it applies all three. Until it is run, the front page and most other pages fail on the live site.
 
 ## Every day, until the Admin area can be used on the live site
 
@@ -26,6 +26,19 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15, #17 and #20. #16 (Electi
 - [ ] Look at `/admin` at least daily. A Reported Feeling stays hidden until you put it back or remove it, and one still waiting at midnight can't win.
 - [ ] For a correction direction (POFMA or similar): `/admin`, "Showing now", type the notice, Save. It shows on the Feeling on the front page, in the archive and on its share page.
 - [ ] To take a published Feeling down: `/admin`, "Showing now", "Take down now". It is one click, immediate and can't be undone. For an older one that is only in the archive, ask an agent: there is no button for those yet.
+
+## Switching on the daily notification (ticket #19)
+
+- [ ] Run `npm run push:keys`. It writes the private key to `.env.push-keys.local` and prints the public key.
+- [ ] In Vercel, set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (the public key), `VAPID_PRIVATE_KEY` (the private one) and `VAPID_SUBJECT` (`mailto:` and your email), then redeploy. Delete the key file. Until all are set the site offers no opt-in; with only one set, the site refuses to start and says which is missing.
+- [ ] Make sure `CRON_SECRET` is set (the same one the Approval reminder uses). Vercel then calls `/api/cron/morning` at 07:00 Singapore time. On Hobby a job can run up to an hour late.
+- [ ] Try it on a real phone: log in, accept the prompt, then call `/api/cron/morning` with `Authorization: Bearer <CRON_SECRET>` and see the notification arrive. On an iPhone it only works once Yah Lah is added to the Home Screen.
+- [ ] Hobby allows two scheduled jobs and the site now uses both (the Approval reminder and the morning job). A third needs Pro, or its work has to go into one of these.
+
+## When someone asks for a Feeling to be removed, or deletes their account (ticket #18)
+
+- [ ] Look at "Removal requests" at the top of `/admin` at least daily: each has a "due by" time, 24 hours after it was asked. "Remove it" takes the Feeling off the front page and out of the archive.
+- [ ] Someone who deletes their account can tick a box to ask for their Feelings of the Day to be removed in the same go. If they don't, there is no way for them to ask afterwards, as Yah Lah has no contact channel: decide whether to publish an email address for that.
 
 ## Every evening, from now on
 
@@ -107,6 +120,11 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] A Feeling with a correction notice shows "Correction notice attached: see the link" on its preview image, and the notice in the link's description. The notice itself is not drawn on the image.
 - [ ] Share links use `https://sg-pulse.vercel.app` (Vercel's production address). Set `SITE_URL` in Vercel if you move to your own domain.
 - [ ] The audit log records Reports and every Admin action, and nothing yet reads it on screen or trims it at 12 months: both are part of #18.
+
+- [ ] A Take-down putting the next most-upvoted Feeling in place without your Approval is confirmed by you (13 Nov), so ADR 0002 should say so. Ask an agent to amend it.
+- [ ] Deleting an account removes that person's Upvotes, so the final count shown on a Feeling of the Day they voted for goes down by one. The winners themselves stay.
+- [ ] A deleted account leaves a record in the log with its internal ID and no name, kept 12 months. The log is trimmed by the morning job; an Admin screen to read it is not built.
+- [ ] The daily notification leaves out nothing yet. When Election Mode (#16) is built it must hide held Hashtags from the push as well.
 
 ## Later, whenever you like
 

@@ -11,7 +11,7 @@ describe("a User submits a Feeling", () => {
 
     const feeling = await me.submitFeeling({ text: "  Finally got a seat on the train  ", polarity: "good", hashtag: " #MRT " });
 
-    expect(feeling).toEqual({ text: "Finally got a seat on the train", polarity: "good", hashtag: "mrt", cycle: "2026-11-12", state: "candidate" });
+    expect(feeling).toMatchObject({ text: "Finally got a seat on the train", polarity: "good", hashtag: "mrt", cycle: "2026-11-12", state: "candidate", removalRequested: false });
     expect(await me.myFeelings()).toEqual([feeling]);
     expect(await app.hashtagsInUse()).toEqual(["mrt"]);
     expect(await me.submission()).toEqual({ cycle: "2026-11-12", canSubmit: false, queued: false });

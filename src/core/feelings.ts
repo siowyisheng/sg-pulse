@@ -82,12 +82,15 @@ export type FeelingState = "queued" | "candidate" | "under-review" | "removed" |
 
 /** A Feeling as its own Submitter sees it. */
 export interface MyFeeling {
+  id: string;
   text: string;
   polarity: Polarity;
   hashtag: string;
   /** The Cycle it competes in. */
   cycle: Cycle;
   state: FeelingState;
+  /** They have asked for it to be removed and the Admin has not yet done so. */
+  removalRequested: boolean;
 }
 
 /** What a User may do about submitting right now. */
@@ -179,6 +182,7 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
         hashtag: schema.feelings.hashtag,
         fromTheTeam: schema.feelings.seed,
         correctionNotice: schema.feelings.correctionNotice,
+        bylineSnapshot: schema.feelings.bylineSnapshot,
         submitter: schema.users,
       })
       .from(schema.feelingsOfTheDay)
@@ -194,10 +198,11 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
             .from(schema.upvotes)
             .where(inArray(schema.upvotes.feelingId, rows.map((row) => row.id)))
             .groupBy(schema.upvotes.feelingId);
-    return rows.map(({ submitter, ...row }) => ({
+    // A Feeling whose writer has left the site keeps the Byline it had; only the team's own have none.
+    return rows.map(({ submitter, bylineSnapshot, ...row }) => ({
       ...row,
-      byline: submitter ? bylineOf(submitter, now) : null,
-      yahLahs: submitter ? (counted.find((found) => found.feelingId === row.id)?.yahLahs ?? 0) : null,
+      byline: submitter ? bylineOf(submitter, now) : ((bylineSnapshot as Byline | null) ?? null),
+      yahLahs: row.fromTheTeam ? null : (counted.find((found) => found.feelingId === row.id)?.yahLahs ?? 0),
     }));
   }
 
@@ -434,17 +439,19 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
         const queued = cycle !== cycleOf(now);
         throw new FeelingError("ALREADY_SUBMITTED", queued ? "You already have a Feeling queued for tomorrow." : "You've already submitted a Feeling today. You can write another after 9pm.");
       }
-      return { text, polarity, hashtag, cycle, state: stateOf(cycle, false) };
+      return { id: added[0]!.id, text, polarity, hashtag, cycle, state: stateOf(cycle, false), removalRequested: false };
     },
 
     /** A Submitter's own Feelings, newest Cycle first. */
     async mine(userId: string): Promise<MyFeeling[]> {
       const rows = await db
         .select({
+          id: schema.feelings.id,
           text: schema.feelings.text,
           polarity: schema.feelings.polarity,
           hashtag: schema.feelings.hashtag,
           cycle: schema.feelings.cycle,
+          removalRequested: sql<boolean>`EXISTS (SELECT 1 FROM ${schema.removalRequests} AS asked WHERE asked.feeling_id = ${schema.feelings.id} AND asked.resolved_at IS NULL)`,
           wonCycle: schema.feelingsOfTheDay.cycle,
           reportedAt: schema.feelings.reportedAt,
           removedAt: schema.feelings.removedAt,

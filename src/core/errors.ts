@@ -59,3 +59,7 @@ export class ApprovalError extends UserFacingError<"NOT_A_CHOICE"> {}
 export class ReportError extends UserFacingError<"NOT_A_CANDIDATE" | "OWN_FEELING" | "TIMED_OUT"> {}
 
 export class ModerationError extends UserFacingError<"NO_SUCH_FEELING" | "NOT_REPORTED" | "NOTICE_TOO_LONG"> {}
+
+export type PrivacyErrorCode = "NOT_YOUR_WINNER";
+
+export class PrivacyError extends UserFacingError<PrivacyErrorCode> {}

@@ -1,4 +1,4 @@
-import webpush from "web-push";
+import * as webpush from "web-push";
 import { PushSubscriptionGoneError, type WebPush, type WebPushPayload, type WebPushSubscription } from "@/core/ports";
 
 export interface Vapid {

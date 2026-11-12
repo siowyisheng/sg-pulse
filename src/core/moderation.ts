@@ -26,7 +26,7 @@ export interface ReportedFeeling {
   yahLahs: number;
 }
 
-export type AuditAction = "report" | "report-cleared" | "take-down" | "correction-notice" | "approve" | "approval-withdrawn" | "seed-scheduled" | "seed-unscheduled";
+export type AuditAction = "report" | "report-cleared" | "take-down" | "correction-notice" | "approve" | "approval-withdrawn" | "seed-scheduled" | "seed-unscheduled" | "submit" | "removal-requested" | "account-deleted";
 
 export interface AuditEntry {
   at: Date;
@@ -180,6 +180,10 @@ export function createModeration({ db, clock }: { db: Db; clock: Clock }) {
         .update(schema.reports)
         .set({ outcome: "removed", resolvedAt: now })
         .where(and(eq(schema.reports.feelingId, feelingId), isNull(schema.reports.outcome)));
+      await db
+        .update(schema.removalRequests)
+        .set({ resolvedAt: now })
+        .where(and(eq(schema.removalRequests.feelingId, feelingId), isNull(schema.removalRequests.resolvedAt)));
 
       const days = await db.select().from(schema.feelingsOfTheDay).where(eq(schema.feelingsOfTheDay.feelingId, feelingId));
       /** What took the place of a Feeling that was showing, for the record. */

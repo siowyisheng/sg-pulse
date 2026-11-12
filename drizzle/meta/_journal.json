@@ -50,6 +50,13 @@
       "when": 1794514133363,
       "tag": "0006_daily_push",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794514274316,
+      "tag": "0007_removal_and_deletion",
+      "breakpoints": true
     }
   ]
 }

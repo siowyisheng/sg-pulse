@@ -59,7 +59,7 @@ function Choices({ polarity, choices, approvedId, goesLive }: { polarity: Polari
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ problem?: string | string[] }> }) {
   const me = await currentMe();
   if (!me?.isAdmin) notFound();
-  const [approval, reports, live] = await Promise.all([me.asAdmin().approvalChoices(), me.asAdmin().reports(), (await getApp()).feelingsOfTheDay()]);
+  const [approval, reports, removals, live] = await Promise.all([me.asAdmin().approvalChoices(), me.asAdmin().reports(), me.asAdmin().removalRequests(), (await getApp()).feelingsOfTheDay()]);
   const showing = [live.good, live.bad].filter((feeling) => feeling !== null);
   const missed = (await searchParams).problem === "NOT_A_CHOICE";
   const today = (await getApp()).currentCycle();
@@ -67,6 +67,30 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   return (
     <main className="page">
       <h1>Admin</h1>
+      <section className="stack">
+        <h2>Removal requests</h2>
+        {removals.length === 0 && <p className="muted">Nobody is waiting for a Feeling to be removed.</p>}
+        {removals.map((request) => (
+          <Card key={request.feelingId} className="stack wide">
+            <p className="feeling-meta">
+              <PolarityBadge polarity={request.polarity} />
+              <span className="caption muted">
+                Asked {formatMoment(request.requestedAt)} · due by {formatMoment(request.dueBy)} · published {formatCycle(request.cycle)}
+              </span>
+            </p>
+            <p className="candidate-text">{request.text}</p>
+            <p className="feeling-meta">
+              <span className={`hashtag hashtag-${request.polarity}`}>#{request.hashtag}</span>
+              {request.byline && <BylineChip>{bylineText(request.byline)}</BylineChip>}
+            </p>
+            <form action={takeDownAction.bind(null, request.feelingId)}>
+              <Button variant="secondary" type="submit">
+                Remove it
+              </Button>
+            </form>
+          </Card>
+        ))}
+      </section>
       <section className="stack">
         <h2>Reports</h2>
         {reports.length === 0 && <p className="muted">No Feeling is waiting on you.</p>}

@@ -2,7 +2,7 @@
 // The private key goes to a file rather than the screen, so it stays out of terminal history.
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import webpush from "web-push";
+import * as webpush from "web-push";
 
 const { publicKey, privateKey } = webpush.generateVAPIDKeys();
 const file = resolve(".env.push-keys.local");

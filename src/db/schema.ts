@@ -25,6 +25,8 @@ export const feelings = pgTable(
     reportedAt: timestamp("reported_at", { withTimezone: true }),
     /** Taken down by an Admin: gone from everywhere, for good. */
     removedAt: timestamp("removed_at", { withTimezone: true }),
+    /** What the Byline read when its Submitter deleted their account: a published winner outlives its writer. */
+    bylineSnapshot: jsonb("byline_snapshot").$type<{ initials: string | null; sex: "M" | "F" | null; ageBand: string }>(),
     /** A notice an Admin has attached, shown wherever the Feeling is published. */
     correctionNotice: text("correction_notice"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -159,3 +161,20 @@ export const auditLog = pgTable("audit_log", {
   feelingId: uuid("feeling_id"),
   detail: text("detail"),
 });
+
+/** A User's request that a Feeling of theirs that has been published be removed, to be honoured within 24 hours. */
+export const removalRequests = pgTable(
+  "removal_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    feelingId: uuid("feeling_id")
+      .notNull()
+      .references(() => feelings.id, { onDelete: "cascade" }),
+    /** Kept when the account is deleted: the request stands. */
+    requesterId: uuid("requester_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    /** When the Feeling was taken down. */
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (table) => [index("removal_requests_by_feeling").on(table.feelingId)],
+);
