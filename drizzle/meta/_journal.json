@@ -43,6 +43,13 @@
       "when": 1794512112104,
       "tag": "0005_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794514133363,
+      "tag": "0006_daily_push",
+      "breakpoints": true
     }
   ]
 }

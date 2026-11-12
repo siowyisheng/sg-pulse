@@ -47,7 +47,15 @@ export interface WebPushPayload {
   link?: string;
 }
 
-/** Sends a web push to one browser. Any error it throws is a fault; the caller never lets it undo anything. */
+/** The push service says this subscription no longer exists: the browser was uninstalled, or the User revoked permission. */
+export class PushSubscriptionGoneError extends Error {
+  override name = "PushSubscriptionGoneError";
+}
+
+/**
+ * Sends a web push to one browser. A PushSubscriptionGoneError means the subscription is dead and
+ * should be forgotten; any other error is a fault. The caller never lets either undo anything.
+ */
 export interface WebPush {
   send(subscription: WebPushSubscription, payload: WebPushPayload): Promise<void>;
 }

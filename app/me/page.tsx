@@ -48,6 +48,11 @@ export default async function MyFeelings() {
           <a href="/submit">Write a Feeling{submission.queued ? " for tomorrow" : ""}</a>
         </p>
       )}
+      {process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && (
+        <p>
+          <a href="/notifications">Daily notification</a>
+        </p>
+      )}
       {me.reportingTimedOutUntil && (
         <p className="notice" role="note">
           <span>

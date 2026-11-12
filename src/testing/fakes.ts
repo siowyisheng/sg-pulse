@@ -1,4 +1,4 @@
-import type { Clock, WebPush, WebPushPayload, WebPushSubscription } from "@/core/ports";
+import { PushSubscriptionGoneError, type Clock, type WebPush, type WebPushPayload, type WebPushSubscription } from "@/core/ports";
 
 interface Duration {
   hours?: number;
@@ -29,13 +29,20 @@ export class FakeClock implements Clock {
 export class FakeWebPush implements WebPush {
   readonly sent: { subscription: WebPushSubscription; payload: WebPushPayload }[] = [];
   private outage: Error | undefined;
+  private gone = new Set<string>();
 
   /** Make every send fail with `error`, as if the push service were down. */
   failWith(error: Error | undefined) {
     this.outage = error;
   }
 
+  /** The push service now reports this endpoint as gone. */
+  expire(endpoint: string) {
+    this.gone.add(endpoint);
+  }
+
   async send(subscription: WebPushSubscription, payload: WebPushPayload) {
+    if (this.gone.has(subscription.endpoint)) throw new PushSubscriptionGoneError("gone");
     if (this.outage) throw this.outage;
     this.sent.push({ subscription, payload });
   }

@@ -1,0 +1,1 @@
+ALTER TABLE "push_subscriptions" ADD COLUMN "last_pushed_cycle" date;

@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import type { JWK } from "jose";
+import { createWebPush } from "@/adapters/web-push";
 import { createSingpassFapi, SINGPASS_ISSUERS } from "@/adapters/singpass-fapi";
 import { createApp, type App } from "@/core/app";
 import { parseSingpassPrivateJwks } from "@/core/jwks";
@@ -40,7 +41,19 @@ export function getSingpass(env: Record<string, string | undefined> = process.en
 
 /** Kept between requests, so Singpass's discovery document and keys stay cached. */
 let singpass: Singpass | undefined;
-const webPush: WebPush = { send: () => notConfigured("Web push") };
+/**
+ * Web push is connected once the VAPID keys are set (`npm run push:keys`); until then the site
+ * offers no opt-in, and a send fails loudly.
+ */
+export function getWebPush(env: Record<string, string | undefined> = process.env): WebPush {
+  const publicKey = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = env.VAPID_PRIVATE_KEY;
+  if (!publicKey && !privateKey) return { send: async () => notConfigured("Web push") };
+  if (!publicKey || !privateKey) throw new Error("Web push needs both NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY (from npm run push:keys).");
+  return createWebPush({ publicKey, privateKey, subject: env.VAPID_SUBJECT || "mailto:admin@example.com" });
+}
+
+let webPush: WebPush | undefined;
 const systemClock: Clock = { now: () => new Date() };
 
 function requireEnv(name: string): string {
@@ -56,5 +69,5 @@ function requireEnv(name: string): string {
 export async function getApp(): Promise<App> {
   if (isDemoMode()) return (await import("@/demo")).getDemoApp();
   const db = drizzle(neon(requireEnv("DATABASE_URL")), { schema });
-  return createApp({ db, clock: systemClock, singpass: (singpass ??= getSingpass()), webPush });
+  return createApp({ db, clock: systemClock, singpass: (singpass ??= getSingpass()), webPush: (webPush ??= getWebPush()) });
 }

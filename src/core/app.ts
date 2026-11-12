@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, isNull, ne, or } from "drizzle-orm";
 import type { Db } from "@/db";
 import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
@@ -7,7 +7,7 @@ import { AdminError } from "./errors";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
 import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type PublishedFeeling, type ScheduledSeedFeeling, type SharePreview, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
-import type { Clock, Random, Singpass, WebPush, WebPushSubscription } from "./ports";
+import { PushSubscriptionGoneError, type Clock, type Random, type Singpass, type WebPush, type WebPushSubscription } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
@@ -256,7 +256,41 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
             await webPush.send(subscription, { title: "Approve tomorrow's Feelings", body, link: "/admin" });
             sent++;
           } catch (error) {
-            console.error("The Approval reminder couldn't be pushed", error);
+            if (error instanceof PushSubscriptionGoneError) await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));
+            else console.error("The Approval reminder couldn't be pushed", error);
+          }
+        }
+        return { sent };
+      },
+
+      /**
+       * The morning push: tells every browser that allowed pushes which Hashtags today's two Feelings
+       * of the Day are about. Run by a daily job. A browser is claimed for the Cycle before it is sent
+       * to, so running it twice sends once; one the push service reports as gone is forgotten, and one
+       * that merely failed is let off the claim so the next run tries it again.
+       */
+      async sendDailyPush(): Promise<{ sent: number }> {
+        const today = await feelings.ofTheDay();
+        const tags = [today.good, today.bad].flatMap((feeling) => (feeling ? [`#${feeling.hashtag}`] : []));
+        if (tags.length === 0) return { sent: 0 };
+        const cycle = cycleOf(clock.now());
+        const claimed = await db
+          .update(schema.pushSubscriptions)
+          .set({ lastPushedCycle: cycle })
+          .where(or(isNull(schema.pushSubscriptions.lastPushedCycle), ne(schema.pushSubscriptions.lastPushedCycle, cycle)))
+          .returning({ endpoint: schema.pushSubscriptions.endpoint, p256dh: schema.pushSubscriptions.p256dh, auth: schema.pushSubscriptions.auth });
+        let sent = 0;
+        for (const subscription of claimed) {
+          const forget = () => db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));
+          try {
+            await webPush.send(subscription, { title: "Yah Lah", body: `SG's FOTD are about ${tags.join(" and ")}`, link: "/" });
+            sent++;
+          } catch (error) {
+            if (error instanceof PushSubscriptionGoneError) await forget();
+            else {
+              console.error("The daily push couldn't be sent", error);
+              await db.update(schema.pushSubscriptions).set({ lastPushedCycle: null }).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));
+            }
           }
         }
         return { sent };

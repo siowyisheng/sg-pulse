@@ -127,6 +127,8 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
     .references(() => users.id, { onDelete: "cascade" }),
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),
+  /** The Cycle whose daily push this browser last received: one a day, however often the job runs. */
+  lastPushedCycle: date("last_pushed_cycle", { mode: "string" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 

@@ -30,7 +30,8 @@ export async function confirmConsentAction(): Promise<void> {
   } catch (error) {
     problem = singpassProblemOf(error);
   }
-  redirect(problem ? `/sign-in?problem=${problem}` : "/");
+  // Right after joining is when to offer the daily notification, if the site has it switched on.
+  redirect(problem ? `/sign-in?problem=${problem}` : process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? "/notifications" : "/");
 }
 
 /** The person decides not to join: nothing is kept. */
