@@ -38,8 +38,8 @@ async function build(): Promise<App> {
   for (let day = 0; day < 14; day++) {
     const cycle = cycleOf(new Date(clock.now().getTime() + day * DAY_MS));
     const sample = SAMPLES[day % SAMPLES.length]!;
-    await app.addSeedFeelingOfTheDay({ cycle, polarity: "good", text: sample.good[0], hashtag: sample.good[1] });
-    await app.addSeedFeelingOfTheDay({ cycle, polarity: "bad", text: sample.bad[0], hashtag: sample.bad[1] });
+    await app.operator.scheduleSeedFeeling({ cycle, polarity: "good", text: sample.good[0], hashtag: sample.good[1] });
+    await app.operator.scheduleSeedFeeling({ cycle, polarity: "bad", text: sample.bad[0], hashtag: sample.bad[1] });
   }
   return app;
 }

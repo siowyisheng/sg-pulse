@@ -15,6 +15,13 @@
       "when": 1794483768440,
       "tag": "0001_users_and_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794484978440,
+      "tag": "0002_admins_and_submissions",
+      "breakpoints": true
     }
   ]
 }

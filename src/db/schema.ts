@@ -1,17 +1,24 @@
-import { boolean, date, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const polarity = pgEnum("polarity", ["good", "bad"]);
 
-/** A Feeling. A Seed Feeling is written by the team and has no Submitter. */
-export const feelings = pgTable("feelings", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  text: text("text").notNull(),
-  polarity: polarity("polarity").notNull(),
-  /** Normalised: lowercase, no "#". */
-  hashtag: text("hashtag").notNull(),
-  seed: boolean("seed").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-});
+/** A Feeling. A Seed Feeling is written by the team and has no Submitter and no Cycle of its own. */
+export const feelings = pgTable(
+  "feelings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    text: text("text").notNull(),
+    polarity: polarity("polarity").notNull(),
+    /** Normalised: lowercase, no "#". */
+    hashtag: text("hashtag").notNull(),
+    seed: boolean("seed").notNull().default(false),
+    submitterId: uuid("submitter_id").references((): AnyPgColumn => users.id),
+    /** The Cycle a submitted Feeling competes in: its Submitter's one Feeling for that Cycle. */
+    cycle: date("cycle", { mode: "string" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [uniqueIndex("feelings_one_per_submitter_per_cycle").on(table.submitterId, table.cycle)],
+);
 
 /** The Good and the Bad Feeling of the Day for each Cycle (a Singapore calendar date). */
 export const feelingsOfTheDay = pgTable(
@@ -38,6 +45,8 @@ export const users = pgTable("users", {
   /** "M" or "F"; null when Myinfo records it as unknown. */
   sex: text("sex"),
   dateOfBirth: date("date_of_birth", { mode: "string" }).notNull(),
+  /** The operator of the site. Set by hand (npm run admin), never from the site itself. */
+  isAdmin: boolean("is_admin").notNull().default(false),
   /** When they agreed to what becomes public. */
   consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),

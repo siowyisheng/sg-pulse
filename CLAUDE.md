@@ -21,3 +21,7 @@ Tests go through the application interface only (`createTestApp` in `src/testing
 ## Styling
 
 `docs/style-guide.md` is the reference and `src/theme/tokens.ts` carries it into the app. Never write a colour or font value anywhere else: use the CSS variables (`var(--color-…)`, `var(--type-…)`, `var(--space-…)`, `var(--radius-…)`) and the shared components in `src/ui/`. `npm run check:style` (run by `npm test` and before every build) fails on a raw value or on a text and background pair below the contrast minimum. A new colour goes into the guide and the tokens together; a new text-on-background combination goes into `pairs` in the tokens. `/style-guide` shows the components as they render.
+
+## Owner to-dos
+
+`docs/owner-todo.md` lists everything that needs the owner rather than an agent. When your work leaves something for them (a migration to run, an account to set up, a decision to confirm), add it there in the same commit. Never tick an item yourself.

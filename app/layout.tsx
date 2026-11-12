@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -7,7 +8,6 @@ import { colors, tokensCss } from "@/theme/tokens";
 import { BylineChip } from "@/ui/badges";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
-import { signOutAction } from "./auth-actions";
 import "./globals.css";
 
 // next/font serves the files from our own domain and sizes the fallback font to match, so text
@@ -41,20 +41,29 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <img src="/brand/mark.png" alt="" width={32} height={32} />
             <span>Yah Lah</span>
           </a>
-          {me ? (
-            <form className="header-actions" action={signOutAction}>
-              <BylineChip>{bylineText(me.byline)}</BylineChip>
-              <button type="submit" className="header-link">
-                Log out
-              </button>
-            </form>
-          ) : (
-            isSingpassConnected() && (
+          <nav className="header-actions" aria-label="Your account">
+            {me?.isAdmin && (
+              <a className="header-link" href="/admin">
+                Admin
+              </a>
+            )}
+            {me && (
+              <>
+                {/* Moves to the voting screen once that exists. */}
+                <a className="header-link" href="/submit" aria-label="Write a Feeling">
+                  <Plus aria-hidden="true" size={24} />
+                </a>
+                <a className="header-link" href="/me" aria-label="My Feelings">
+                  <BylineChip>{bylineText(me.byline)}</BylineChip>
+                </a>
+              </>
+            )}
+            {!me && isSingpassConnected() && (
               <a className="header-link" href="/sign-in">
                 Log in
               </a>
-            )
-          )}
+            )}
+          </nav>
         </header>
         {children}
       </body>

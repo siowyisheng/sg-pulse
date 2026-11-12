@@ -12,7 +12,7 @@ if (!cycle || !hashtag || !text || !POLARITIES.includes(polarity as Polarity)) {
 
 try {
   const app = await getApp();
-  await app.addSeedFeelingOfTheDay({ cycle, polarity: polarity as Polarity, hashtag, text });
+  await app.operator.scheduleSeedFeeling({ cycle, polarity: polarity as Polarity, hashtag, text });
   console.log(`Added the ${polarity} Feeling of the Day for ${cycle}.`);
 } catch (error) {
   if (!isUserFacing(error)) throw error;

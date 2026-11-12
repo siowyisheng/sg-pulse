@@ -17,3 +17,21 @@ export function isCycle(value: string): value is Cycle {
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
+
+/** The Cycle after this one. */
+export function nextCycle(cycle: Cycle): Cycle {
+  return new Date(Date.parse(`${cycle}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+}
+
+/** The hour in Singapore from which a new Feeling is queued for the next Cycle. */
+export const CUT_OFF_HOUR = 21;
+
+/**
+ * The Cycle a Feeling submitted at this moment competes in: today's, or from 21:00 SGT tomorrow's,
+ * so the last Feelings of a day are not up against ones that have gathered Upvotes since morning.
+ */
+export function submissionCycleOf(moment: Date): Cycle {
+  const today = cycleOf(moment);
+  const hour = new Date(moment.getTime() + SINGAPORE_OFFSET_MS).getUTCHours();
+  return hour >= CUT_OFF_HOUR ? nextCycle(today) : today;
+}

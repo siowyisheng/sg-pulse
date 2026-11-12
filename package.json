@@ -15,7 +15,8 @@
     "test:all": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "admin": "tsx --env-file=.env.local scripts/admin.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

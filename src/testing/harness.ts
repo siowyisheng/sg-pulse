@@ -70,6 +70,15 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return { session, me };
   }
 
+  /** Logs this person in as an Admin. */
+  async function signUpAdmin(person: SingpassPerson) {
+    const first = await signUp(person);
+    await app.operator.makeAdmin(first.me.userId);
+    const me = await app.authenticate(first.session.token);
+    if (!me) throw new Error("The Admin's session did not work");
+    return { session: first.session, me };
+  }
+
   /** Every row of every table, as text: for checking that something was never written down. */
   async function everythingStored(): Promise<string> {
     const tables = await client.query<{ tablename: string }>("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
@@ -77,5 +86,5 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return JSON.stringify(rows);
   }
 
-  return { app, clock, webPush, logIn, signUp, everythingStored };
+  return { app, clock, webPush, logIn, signUp, signUpAdmin, everythingStored };
 }

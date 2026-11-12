@@ -20,7 +20,7 @@ function Feeling({ polarity, feeling }: { polarity: Polarity; feeling: FeelingOf
         <>
           <p className="feeling-text">{feeling.text}</p>
           <p className="feeling-meta">
-            <span className="hashtag">#{feeling.hashtag}</span>
+            <span className={`hashtag hashtag-${polarity}`}>#{feeling.hashtag}</span>
             {feeling.fromTheTeam && <FromTheTeamChip />}
           </p>
         </>

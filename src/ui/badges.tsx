@@ -62,3 +62,8 @@ export function UnderReviewChip() {
     </span>
   );
 }
+
+/** Where something stands, in plain words: "Candidate today", "Expired". */
+export function StateChip({ children }: { children: ReactNode }) {
+  return <span className="chip chip-neutral">{children}</span>;
+}

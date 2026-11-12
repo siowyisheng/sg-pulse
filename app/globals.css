@@ -91,6 +91,7 @@ a {
   font-weight: var(--type-h2-weight);
   line-height: var(--type-h3-line);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .wordmark img {
@@ -341,11 +342,11 @@ a {
   font-weight: var(--type-body-bold-weight);
 }
 
-.feeling-good .hashtag {
+.hashtag-good {
   color: var(--color-good-text);
 }
 
-.feeling-bad .hashtag {
+.hashtag-bad {
   color: var(--color-bad-text);
 }
 
@@ -475,7 +476,8 @@ ul.stack li {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   min-height: var(--size-touch-target);
   padding: 0 var(--space-md);
   border: 1.5px solid var(--color-line);
@@ -536,4 +538,89 @@ ul.stack li {
   align-items: center;
   min-height: var(--size-touch-target);
   font-weight: var(--type-body-bold-weight);
+}
+
+/* Writing a Feeling */
+
+.field textarea {
+  padding: var(--space-sm) var(--space-md);
+  resize: vertical;
+}
+
+.field-note {
+  color: var(--color-ink-muted);
+  font-weight: var(--type-caption-weight);
+}
+
+/* Over the limit: said in words and marked with the error outline's colour on the count's edge, not by colour alone. */
+.field-note.over {
+  padding-left: var(--space-sm);
+  border-left: 3px solid var(--color-error);
+  color: var(--color-ink);
+  font-weight: var(--type-body-bold-weight);
+}
+
+.toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.toggle legend {
+  margin-bottom: var(--space-xs);
+  padding: 0;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+}
+
+.toggle-option {
+  flex: 1;
+  cursor: pointer;
+}
+
+/* The radio button itself is hidden; its label is the button, and still takes the keyboard's focus. */
+.toggle-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.toggle-option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: var(--size-touch-target);
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-button);
+  font-weight: var(--type-body-bold-weight);
+}
+
+.toggle-option input:focus-visible + span {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 2px;
+}
+
+.toggle-good input:checked + span {
+  border-color: var(--color-good-text);
+  background: var(--color-good-tint);
+  color: var(--color-good-text);
+}
+
+.toggle-bad input:checked + span {
+  border-color: var(--color-bad-text);
+  background: var(--color-bad-tint);
+  color: var(--color-bad-text);
+}
+
+.wide {
+  width: 100%;
+}
+
+.page form.stack {
+  width: 100%;
 }

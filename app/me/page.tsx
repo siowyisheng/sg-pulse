@@ -1,0 +1,72 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import type { MyFeeling } from "@/core/app";
+import { bylineText } from "@/core/byline";
+import { isDemoMode } from "@/demo-flag";
+import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip } from "@/ui/badges";
+import { Button } from "@/ui/buttons";
+import { Card } from "@/ui/card";
+import { formatCycle } from "@/web/format";
+import { currentMe } from "@/web/session";
+import { signOutAction } from "../auth-actions";
+import { becomeAdminInDemoAction } from "../demo/actions";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "My Feelings · Yah Lah" };
+
+function State({ feeling }: { feeling: MyFeeling }) {
+  switch (feeling.state) {
+    case "queued":
+      return <QueuedForTomorrowChip />;
+    case "candidate":
+      return <StateChip>Candidate today</StateChip>;
+    case "winner":
+      return <StateChip>Feeling of the Day</StateChip>;
+    case "expired":
+      return <StateChip>Expired</StateChip>;
+  }
+}
+
+/** A User's own Feelings and where each stands. Only they see this. */
+export default async function MyFeelings() {
+  const me = await currentMe();
+  if (!me) redirect("/sign-in");
+  const [feelings, submission] = await Promise.all([me.myFeelings(), me.submission()]);
+  return (
+    <main className="page">
+      <h1>My Feelings</h1>
+      <p className="feeling-meta">
+        Your Byline <BylineChip>{bylineText(me.byline)}</BylineChip>
+      </p>
+      {submission.canSubmit && (
+        <p>
+          <a href="/submit">Write a Feeling{submission.queued ? " for tomorrow" : ""}</a>
+        </p>
+      )}
+      {feelings.length === 0 && <p className="muted">You haven&apos;t written a Feeling yet.</p>}
+      {feelings.map((feeling) => (
+        <Card key={feeling.cycle} className="stack">
+          <p className="feeling-meta">
+            <PolarityBadge polarity={feeling.polarity} />
+            <time className="caption muted" dateTime={feeling.cycle}>
+              {formatCycle(feeling.cycle)}
+            </time>
+            <State feeling={feeling} />
+          </p>
+          <p>{feeling.text}</p>
+          <p className={`hashtag hashtag-${feeling.polarity}`}>#{feeling.hashtag}</p>
+        </Card>
+      ))}
+      <form className="actions" action={signOutAction}>
+        <Button variant="ghost" type="submit">
+          Log out
+        </Button>
+        {isDemoMode() && !me.isAdmin && (
+          <Button variant="ghost" type="submit" formAction={becomeAdminInDemoAction}>
+            Demo: make me an Admin
+          </Button>
+        )}
+      </form>
+    </main>
+  );
+}

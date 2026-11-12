@@ -1,15 +1,27 @@
-import { eq, sql } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Db } from "@/db";
 import { schema } from "@/db";
-import { bylineOf, type Byline } from "./byline";
-import { cycleOf, isCycle, type Cycle } from "./cycle";
-import { FeelingError } from "./errors";
-import { normalisedHashtag, validText, type Polarity } from "./feeling-rules";
+import { bylineOf, bylineText, type Byline } from "./byline";
+import { cycleOf, type Cycle } from "./cycle";
+import { AdminError } from "./errors";
+import { createFeelings, type FeelingInput, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
+import type { Polarity } from "./feeling-rules";
 import type { Clock, Singpass, WebPush } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
 export type { Session };
+export type { FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+
+/** What only an Admin may do. */
+export interface Admin {
+  /** Writes a Seed Feeling and makes it a Cycle's Feeling of the Day, shown as "From the team". */
+  scheduleSeedFeeling(input: SeedFeelingInput): Promise<void>;
+  /** Seed Feelings scheduled for today's Cycle and later, soonest first. */
+  scheduledSeedFeelings(): Promise<ScheduledSeedFeeling[]>;
+  /** Takes back a Seed Feeling whose Cycle has not started. */
+  unscheduleSeedFeeling(input: { cycle: string; polarity: Polarity }): Promise<void>;
+}
 
 export interface AppDeps {
   db: Db;
@@ -20,36 +32,22 @@ export interface AppDeps {
   webPush: WebPush;
 }
 
-/** A Feeling of the Day as a Visitor sees it. */
-export interface FeelingOfTheDay {
-  polarity: Polarity;
-  text: string;
-  /** Without the "#". */
-  hashtag: string;
-  /** A Seed Feeling: shown as "From the team", with no Byline. */
-  fromTheTeam: boolean;
-}
-
-export interface FeelingsOfTheDay {
-  cycle: Cycle;
-  /** Null when no Feeling of the Day was chosen for that Polarity. */
-  good: FeelingOfTheDay | null;
-  bad: FeelingOfTheDay | null;
-}
-
-export interface SeedFeelingInput {
-  cycle: string;
-  polarity: Polarity;
-  text: string;
-  hashtag: string;
-}
-
 /** A signed-in User, and what they may see or do. */
 export interface Me {
+  userId: string;
   /** What will show beside their Feelings, as of now. */
   byline: Byline;
   /** When they will have to log in again unless they visit before then. */
   sessionExpiresAt: Date;
+  isAdmin: boolean;
+  /** The Admin area. Throws for anyone who is not an Admin. */
+  asAdmin(): Admin;
+  /** Whether they can submit a Feeling now, and for which Cycle. */
+  submission(): Promise<Submission>;
+  /** Their one Feeling for a Cycle. It can't be edited or withdrawn afterwards. */
+  submitFeeling(input: FeelingInput): Promise<MyFeeling>;
+  /** Their own Feelings and where each stands, newest first. */
+  myFeelings(): Promise<MyFeeling[]>;
 }
 
 /** How a trip to Singpass ended: a returning User is signed in; someone new must agree first. */
@@ -61,6 +59,13 @@ export type App = ReturnType<typeof createApp>;
 export function createApp({ db, clock, singpass }: AppDeps) {
   const sessions = createSessions({ db, clock });
   const logins = createSingpassLogins({ db, clock, singpass });
+  const feelings = createFeelings({ db, clock });
+
+  const admin: Admin = {
+    scheduleSeedFeeling: (input) => feelings.scheduleSeed(input),
+    scheduledSeedFeelings: () => feelings.scheduledSeeds(),
+    unscheduleSeedFeeling: (input) => feelings.unscheduleSeed(input),
+  };
 
   return {
     /** Starts a Singpass login: send the browser to `url`, and have it keep `state` for the way back. */
@@ -103,51 +108,52 @@ export function createApp({ db, clock, singpass }: AppDeps) {
     async authenticate(token: string): Promise<Me | undefined> {
       const visit = await sessions.visit(token);
       if (!visit) return undefined;
-      return { byline: bylineOf(visit.user, clock.now()), sessionExpiresAt: visit.expiresAt };
+      const { id: userId, isAdmin } = visit.user;
+      return {
+        userId,
+        byline: bylineOf(visit.user, clock.now()),
+        sessionExpiresAt: visit.expiresAt,
+        isAdmin,
+        asAdmin() {
+          if (!isAdmin) throw new AdminError("NOT_ADMIN", "This is for Admins only.");
+          return admin;
+        },
+        submission: () => feelings.submission(userId),
+        submitFeeling: (input) => feelings.submit(userId, input),
+        myFeelings: () => feelings.mine(userId),
+      };
     },
 
     signOut: (token: string) => sessions.end(token),
 
+    /** The Cycle it is right now in Singapore. */
+    currentCycle: (): Cycle => cycleOf(clock.now()),
+
     /** The Feelings of the Day for the Cycle it is right now in Singapore. Open to any Visitor. */
-    async feelingsOfTheDay(): Promise<FeelingsOfTheDay> {
-      const cycle = cycleOf(clock.now());
-      const rows = await db
-        .select({
-          polarity: schema.feelingsOfTheDay.polarity,
-          text: schema.feelings.text,
-          hashtag: schema.feelings.hashtag,
-          fromTheTeam: schema.feelings.seed,
-        })
-        .from(schema.feelingsOfTheDay)
-        .innerJoin(schema.feelings, eq(schema.feelings.id, schema.feelingsOfTheDay.feelingId))
-        .where(eq(schema.feelingsOfTheDay.cycle, cycle));
-      const of = (polarity: Polarity) => rows.find((row) => row.polarity === polarity) ?? null;
-      return { cycle, good: of("good"), bad: of("bad") };
-    },
+    feelingsOfTheDay: (): Promise<FeelingsOfTheDay> => feelings.ofTheDay(),
+
+    /** The Hashtags of the Cycle under way, most used first, for a new Feeling to join. Open to any Visitor. */
+    hashtagsInUse: (): Promise<string[]> => feelings.hashtagsInUse(),
 
     /**
-     * Writes a Seed Feeling and makes it a Cycle's Feeling of the Day for its Polarity. For the team
-     * only: nothing on the site calls this until the Admin area exists.
+     * For the operator's own scripts, which run with the database's credentials: nothing on the
+     * site calls these.
      */
-    async addSeedFeelingOfTheDay(input: SeedFeelingInput): Promise<void> {
-      if (!isCycle(input.cycle)) throw new FeelingError("INVALID_CYCLE", "A Cycle is a date, like 2026-11-12.");
-      const text = validText(input.text);
-      const hashtag = normalisedHashtag(input.hashtag);
-      // One statement, so a Seed Feeling is never left behind without its day.
-      const added = await db.execute(sql`
-        WITH chosen AS (
-          INSERT INTO ${schema.feelingsOfTheDay} (cycle, polarity, feeling_id)
-          VALUES (${input.cycle}::date, ${input.polarity}::polarity, gen_random_uuid())
-          ON CONFLICT DO NOTHING
-          RETURNING feeling_id
-        )
-        INSERT INTO ${schema.feelings} (id, text, polarity, hashtag, seed, created_at)
-        SELECT feeling_id, ${text}::text, ${input.polarity}::polarity, ${hashtag}::text, true, ${clock.now().toISOString()}::timestamptz FROM chosen
-        RETURNING id
-      `);
-      if ((added as unknown as { rows: unknown[] }).rows.length === 0) {
-        throw new FeelingError("ALREADY_CHOSEN", `${input.cycle} already has a ${input.polarity === "good" ? "Good" : "Bad"} Feeling of the Day.`);
-      }
+    operator: {
+      scheduleSeedFeeling: (input: SeedFeelingInput) => feelings.scheduleSeed(input),
+
+      /** Every User, by Byline, to find the one to make an Admin. */
+      async listUsers(): Promise<{ userId: string; byline: string; isAdmin: boolean; joinedAt: Date }[]> {
+        const users = await db.select().from(schema.users).orderBy(asc(schema.users.createdAt));
+        return users.map((user) => ({ userId: user.id, byline: bylineText(bylineOf(user, clock.now())), isAdmin: user.isAdmin, joinedAt: user.createdAt }));
+      },
+
+      /** Marks a User as an Admin. Returns false when there is no such User. */
+      async makeAdmin(userId: string): Promise<boolean> {
+        if (!/^[0-9a-f-]{36}$/i.test(userId)) return false;
+        const marked = await db.update(schema.users).set({ isAdmin: true }).where(eq(schema.users.id, userId)).returning({ id: schema.users.id });
+        return marked.length > 0;
+      },
     },
   };
 }

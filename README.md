@@ -30,6 +30,21 @@ The look follows `docs/style-guide.md`; `/style-guide` shows the shared componen
 4. Until the Admin area exists, add each day's Seed Feelings by hand:
    `npm run seed -- 2026-11-13 good kopi "Kopi with the neighbours before work"`
 
+## The Admin area
+
+`/admin` is where an Admin writes and schedules Seed Feelings. To anyone else it is a 404. An Admin is a User the operator has marked by hand: log in once, then
+
+```
+npm run admin -- list
+npm run admin -- grant <user id>
+```
+
+In demo mode, the "Demo: make me an Admin" button on the My Feelings page does the same.
+
+What still needs the owner, rather than an agent, is listed in `docs/owner-todo.md`.
+
+## Database changes
+
 After a schema change, run `npm run db:generate` and commit the new file in `drizzle/`. After pulling one, run `npm run db:migrate` against the live database.
 
 ## Ads and the support link

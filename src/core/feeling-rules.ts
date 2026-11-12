@@ -11,7 +11,8 @@ const characters = (text: string) => [...new Intl.Segmenter(undefined, { granula
 
 /** A Feeling's text, trimmed; refused when empty or over 100 characters. Plain text in any language. */
 export function validText(raw: string): string {
-  const text = raw.trim();
+  // One line: line breaks and runs of spaces become a single space.
+  const text = String(raw).replace(/\s+/gu, " ").trim();
   if (text === "") throw new FeelingError("TEXT_EMPTY", "Write something first.");
   if (characters(text) > MAX_TEXT_CHARACTERS) {
     throw new FeelingError("TEXT_TOO_LONG", `Keep it to ${MAX_TEXT_CHARACTERS} characters.`);
@@ -21,9 +22,21 @@ export function validText(raw: string): string {
 
 /** A Hashtag as stored: lowercased, trimmed, without the "#", so #LKY and #lky are the same. One word, at most 12 characters. */
 export function normalisedHashtag(raw: string): string {
-  const hashtag = raw.trim().replace(/^#+/, "").trim().toLowerCase();
+  const hashtag = String(raw).trim().replace(/^#+/, "").trim().toLowerCase();
   if (hashtag === "" || /[\s#]/.test(hashtag) || characters(hashtag) > MAX_HASHTAG_CHARACTERS) {
     throw new FeelingError("INVALID_HASHTAG", `A Hashtag is one word of up to ${MAX_HASHTAG_CHARACTERS} characters.`);
   }
   return hashtag;
+}
+
+export function validPolarity(raw: unknown): Polarity {
+  if (raw !== "good" && raw !== "bad") throw new FeelingError("INVALID_POLARITY", "Choose Good or Bad.");
+  return raw;
+}
+
+const LINK = /https?:\/\/|\bwww\.|\b[a-z0-9-]+\.(?:com|sg|net|org|io|co|me|ly|gg|app|xyz|info|biz|tv)\b/i;
+
+/** A Feeling is plain text: no links. */
+export function refuseLinks(text: string): void {
+  if (LINK.test(text)) throw new FeelingError("NO_LINKS", "A Feeling is plain text, so leave out links.");
 }

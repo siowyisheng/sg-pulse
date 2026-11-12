@@ -22,7 +22,18 @@ export class UserFacingError<Code extends string> extends Error {
 export const isUserFacing = (error: unknown): error is UserFacingError<string> =>
   error instanceof UserFacingError || (error instanceof Error && (error as { userFacing?: unknown }).userFacing === true);
 
-export type FeelingErrorCode = "TEXT_EMPTY" | "TEXT_TOO_LONG" | "INVALID_HASHTAG" | "INVALID_CYCLE" | "ALREADY_CHOSEN";
+export type FeelingErrorCode =
+  | "TEXT_EMPTY"
+  | "TEXT_TOO_LONG"
+  | "NO_LINKS"
+  | "INVALID_HASHTAG"
+  | "INVALID_POLARITY"
+  | "REFUSED_BY_FILTER"
+  | "ALREADY_SUBMITTED"
+  | "INVALID_CYCLE"
+  | "CYCLE_PAST"
+  | "ALREADY_CHOSEN"
+  | "ALREADY_LIVE";
 
 export class FeelingError extends UserFacingError<FeelingErrorCode> {}
 
@@ -37,3 +48,5 @@ export type SingpassErrorCode = keyof typeof SINGPASS_MESSAGES;
 export class SingpassError extends UserFacingError<SingpassErrorCode> {}
 
 export const singpassError = (code: SingpassErrorCode) => new SingpassError(code, SINGPASS_MESSAGES[code]);
+
+export class AdminError extends UserFacingError<"NOT_ADMIN"> {}
