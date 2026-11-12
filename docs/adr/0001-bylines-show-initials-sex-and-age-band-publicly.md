@@ -7,6 +7,6 @@ For Submitters under 18 the Byline is sex and "<18" only, with no initials. When
 ## Consequences
 
 - **Singpass must approve the `name`, `sex` and `dob` scopes** for a public-display purpose; jio-me deliberately never requested `name`. A refusal would force a redesign.
-- **PDPA**: initials, sex and age band beside the text are probably personal data, so SG Pulse needs explicit consent naming that display, a data protection officer, and an impact assessment before launch. The minimum age is 13.
+- **PDPA**: initials, sex and age band beside the text are probably personal data, so Yah Lah needs explicit consent naming that display, a data protection officer, and an impact assessment before launch. The minimum age is 13.
 - **Removal on request**: a User can ask for a published winner (including its archive entry) to be removed within 24 hours, even though Candidates cannot be edited or withdrawn.
 - **Store only** the Singpass user ID, initials, sex and date of birth. Never the full name or NRIC.

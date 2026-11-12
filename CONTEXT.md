@@ -1,8 +1,12 @@
-# SG Pulse
+# Yah Lah
 
 A daily, mobile-first read of what Singapore is feeling: two short public sentiments a day, chosen by a Singpass-verified electorate.
 
 ## Language
+
+**Yah Lah**:
+The product's name, which is also the label on the Upvote button.
+_Avoid_: SG Pulse (the repository and logo wordmark still use it for now)
 
 **Feeling**:
 A short piece of text a Submitter publishes about how they feel, tied to one Hashtag and one Polarity.
@@ -43,8 +47,8 @@ One Singapore calendar day (00:00 to 23:59 SGT) of Upvoting for its Candidates, 
 _Avoid_: Round, day (when meaning the voting period)
 
 **Upvote**:
-A User's single vote for one Candidate in a Cycle, shown to users as "Yah Lah". Can be moved or undone until the Cycle ends. Counts stay hidden until the winner is announced.
-_Avoid_: Like, vote, Yah Lah (as a noun)
+A User's single vote for one Candidate in a Cycle. Its button is labelled "Yah Lah", the same as the product's name. Can be moved or undone until the Cycle ends. Counts stay hidden until the winner is announced.
+_Avoid_: Like, vote
 
 ## People
 

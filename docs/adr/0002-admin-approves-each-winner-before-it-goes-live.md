@@ -2,7 +2,7 @@
 
 The most-upvoted Candidates do not become the Feelings of the Day automatically: an Admin chooses one of the top three per Polarity before 00:00 SGT (Approval). If none is approved, yesterday's Feeling stays up as a Carry-over. Other Candidates are not reviewed in advance; they pass an automated profanity and slur filter, and Users can Report them.
 
-We considered letting votes decide outright with take-down afterwards. Because SG Pulse selects and republishes the winner to everyone under its own name, it is the publisher of that text. Singapore law (defamation, the Penal Code racial and religious provisions, POFMA, the racial harmony law) treats a selecting publisher as responsible, and POFMA directions can arrive within hours. A pre-publication gate on the one Feeling everybody sees is cheap for a solo operator. This is legal research, not advice; a Singapore lawyer should confirm before launch.
+We considered letting votes decide outright with take-down afterwards. Because Yah Lah selects and republishes the winner to everyone under its own name, it is the publisher of that text. Singapore law (defamation, the Penal Code racial and religious provisions, POFMA, the racial harmony law) treats a selecting publisher as responsible, and POFMA directions can arrive within hours. A pre-publication gate on the one Feeling everybody sees is cheap for a solo operator. This is legal research, not advice; a Singapore lawyer should confirm before launch.
 
 ## Consequences
 
