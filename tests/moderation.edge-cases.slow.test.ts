@@ -256,7 +256,8 @@ describe("the audit log", () => {
     await world.admin.setCorrectionNotice(world.ids.Winner!, "Corrected");
     await world.admin.takeDown(world.ids.Bad!);
 
-    const log = await world.admin.auditLog();
+    // The three Feelings' submissions come first in the record, then what was done to them.
+    const log = (await world.admin.auditLog()).filter((entry) => entry.action !== "submit");
     expect(log.map((entry) => entry.action)).toEqual(["take-down", "correction-notice", "approve", "report-cleared", "report"]);
     expect(log[0]).toMatchObject({ actorId: adminMe.userId, feelingId: world.ids.Bad, at: new Date("2026-11-12T09:03:00+08:00") });
     expect(log[1]).toMatchObject({ detail: "Corrected" });
