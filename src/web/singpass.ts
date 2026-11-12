@@ -15,11 +15,8 @@ const options = {
   maxAge: MAX_AGE_SECONDS,
 };
 
-/**
- * Whether logging in can work here. Only the demo's fake Singpass exists so far; the real one
- * arrives with its own ticket, and until then the site offers no way to log in.
- */
-export const isSingpassConnected = () => isDemoMode();
+/** Whether logging in can work here: in the demo (its fake Singpass), or once the real Singpass is connected. */
+export const isSingpassConnected = () => isDemoMode() || Boolean(process.env.SINGPASS_CLIENT_ID);
 
 /** The login's state, kept by the browser that started it: only that browser can finish it. */
 export async function setSingpassState(state: string) {

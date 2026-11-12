@@ -2,7 +2,7 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 12 Nov 2026, after tickets #2, #5, #6, #8, #9 and #20.
+Last updated: 13 Nov 2026, after tickets #2, #5, #6, #7, #8, #9 and #20.
 
 ## After every push that changes the database
 
@@ -11,20 +11,32 @@ Last updated: 12 Nov 2026, after tickets #2, #5, #6, #8, #9 and #20.
 ## Every day, until the Admin area can be used on the live site
 
 - [ ] Add tomorrow's Good and Bad Seed Feelings: `npm run seed -- 2026-11-14 good kopi "your text"`. Without them the front page says "Nothing here today." Write them yourself; copy nothing from Twitter/X or anywhere else.
-  - The Admin area (`/admin`) does the same job with a form, but nobody can log in on the live site until the real Singpass is connected (#7). After that, log in once, run `npm run admin -- list` to find your user ID, then `npm run admin -- grant <user id>`.
+  - The Admin area (`/admin`) does the same job with a form, once Singpass is connected and you have made yourself an Admin (see Singpass below).
 
 ## Housekeeping on GitHub
 
-- [ ] Check and close #6 and #20 (pushed earlier), then #8 and #9 once you have looked at them. Closing #9 unblocks #10; #13 also needs #8 closed.
+- [ ] Close #6 and #20 (built and pushed; still open). Close #7 once a staging login works.
 
-## Singpass (ticket #3; blocks #7, the real login)
+## Singpass (tickets #3 and #7)
 
-- [ ] Register a Yah Lah app on the Singpass developer portal for staging: its own App ID, redirect URI (`https://<your domain>/singpass/callback`), signing and encryption keys, and the published keys endpoint.
-- [X] Justify the `name`, `sex` and `dob` scopes (not email, mobile or NRIC) for showing a Byline beside each Feeling.
-- [X] Email Singpass partner support early: is public display of initials, sex and age band an acceptable purpose? Record the answer on #3. A "no" forces a Byline redesign.
+The real Singpass adapter is built (#7) and tested against a fake Singpass server. What is left is connecting it and trying it on staging. You registered the staging app with keys address `https://sg-pulse.vercel.app/.well-known/jwks.json` and redirect URL `https://sg-pulse.vercel.app/auth/singpass/callback`; the code matches both.
+
+- [ ] Run `npm run singpass:keys` in your folder. Never paste the private keys into a chat or commit them.
+- [ ] In Vercel, set all four together and redeploy (the app refuses to start if `SINGPASS_CLIENT_ID` is set and another is missing):
+  - `SINGPASS_PRIVATE_JWKS`: the value from `.env.singpass-keys.local`, without the quotes; then delete that file
+  - `SINGPASS_CLIENT_ID`: the staging App ID from the Singpass Developer Portal
+  - `SINGPASS_ENVIRONMENT`: `staging`
+  - `SINGPASS_REDIRECT_URI`: `https://sg-pulse.vercel.app/auth/singpass/callback`
+- [ ] Open `https://sg-pulse.vercel.app/.well-known/jwks.json`: it should show two keys and no `d` field. Check it with Singpass's troubleshooting tool.
+- [ ] On the portal, check the app's scopes are exactly `openid name dob sex`. A scope the app isn't approved for makes every login fail.
+- [ ] Log in on the live site with Singpass staging test personas, and check the Byline on the consent screen for: an ordinary adult; someone under 18 (no initials); someone with sex unknown (no sex); a name with bin, binte, s/o or d/o (particle skipped); and someone under 13 (refused). Tell the agent what happened; if a login fails, the message on screen and the Vercel function log are what it needs.
+- [ ] Try it in a mobile browser and as an installed PWA, on iPhone and Android. Whether Singpass opens its app from the same phone, or only shows a QR code, is still unconfirmed.
+- [ ] After your first login, make yourself an Admin: `npm run admin -- list`, then `npm run admin -- grant <user id>`.
+- [ ] Justify the `name`, `sex` and `dob` scopes (not email, mobile or NRIC) for showing a Byline beside each Feeling.
+- [ ] Email Singpass partner support early: is public display of initials, sex and age band an acceptable purpose? Record the answer on #3. A "no" forces a Byline redesign.
 - [ ] Upload the user journey and request the production app (allow up to 2 weeks). The FAPI 2.0 deadline is 31 Dec 2026.
-- [ ] Hand the staging App ID and keys to #7 as environment values.
-- [ ] Once #7 is built, test logging in on staging in a mobile browser and as an installed PWA, on iPhone and Android. Whether Singpass opens its app from the same phone, or only shows a QR code, is still unconfirmed.
+- [ ] For production, a separate Singpass app with its own keys: run `npm run singpass:keys` again and change the four variables. If production uses a different domain, register that domain's two addresses.
+- [ ] Once real people can log in, the site is live for submissions: do this only when you are ready for that, or keep the address private until launch.
 
 ## Before launch (ticket #4)
 

@@ -15,7 +15,7 @@ function base64url(text: string): string {
 export function FakeSingpassForm({ state, personas }: { state: string; personas: DemoPersona[] }) {
   const [chosen, setChosen] = useState<DemoPersona>(personas[0]!);
   const set = (change: Partial<DemoPersona>) => setChosen((current) => ({ ...current, ...change }));
-  const callback = `/singpass/callback?state=${encodeURIComponent(state)}`;
+  const callback = `/auth/singpass/callback?state=${encodeURIComponent(state)}`;
 
   const agree = () => {
     const { subject, name, dateOfBirth, sex } = chosen;
