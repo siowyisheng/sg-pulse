@@ -211,10 +211,10 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
     /** The Feeling of the Day chosen for a day and Polarity, once it has gone live: what a share link opens. Open to any Visitor. */
     published: (cycle: string, polarity: Polarity): Promise<PublishedFeeling | null> => feelings.publishedOn(cycle, polarity),
 
-    /** What a share link's preview image may show: the text, Hashtag and Polarity, and nothing about who wrote it. */
+    /** What a share link's preview image may show: the text, Hashtag, Polarity and whether it has been corrected, and nothing about who wrote it. */
     async sharePreview(cycle: string, polarity: Polarity): Promise<SharePreview | null> {
       const feeling = await feelings.publishedOn(cycle, polarity);
-      return feeling ? { text: feeling.text, hashtag: feeling.hashtag, polarity: feeling.polarity } : null;
+      return feeling ? { text: feeling.text, hashtag: feeling.hashtag, polarity: feeling.polarity, corrected: feeling.correctionNotice !== null } : null;
     },
 
     /** A Polarity's word cloud for the Cycle under way. Open to any Visitor. */

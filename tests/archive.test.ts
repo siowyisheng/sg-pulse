@@ -16,6 +16,6 @@ describe("a Visitor looks back and shares", () => {
       { cycle: "2026-11-13", polarity: "good", text: "Got a seat on the train", hashtag: "mrt", byline: { initials: "TA", sex: "M", ageBand: "30s" }, yahLahs: 1, fromTheTeam: false },
       { cycle: "2026-11-12", polarity: "good", text: "From the team on Thursday", hashtag: "seed", byline: null, yahLahs: null, fromTheTeam: true },
     ]);
-    expect(await app.sharePreview("2026-11-13", "good")).toEqual({ text: "Got a seat on the train", hashtag: "mrt", polarity: "good" });
+    expect(await app.sharePreview("2026-11-13", "good")).toEqual({ text: "Got a seat on the train", hashtag: "mrt", polarity: "good", corrected: false });
   });
 });

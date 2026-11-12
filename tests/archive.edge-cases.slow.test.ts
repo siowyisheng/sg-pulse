@@ -68,9 +68,30 @@ describe("sharing", () => {
     await (await world.signUpAdmin(ADMIN)).me.asAdmin().approve(candidate!.id);
     world.clock.set("2026-11-13T00:00:00+08:00");
     const preview = await world.app.sharePreview("2026-11-13", "good");
-    expect(Object.keys(preview!).sort()).toEqual(["hashtag", "polarity", "text"]);
+    expect(Object.keys(preview!).sort()).toEqual(["corrected", "hashtag", "polarity", "text"]);
     // The page the link opens does show the Byline, like the front page.
     expect(await world.app.published("2026-11-13", "good")).toMatchObject({ text: "Got a seat", byline: { initials: "TA" }, yahLahs: 0, cycle: "2026-11-13" });
+  });
+
+  it("says when a correction notice is attached, so the corrected Feeling isn't passed around looking clean", async () => {
+    const world = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    const writer = await world.signUp({ subject: "s-1", name: "TAN AH KOW", dateOfBirth: "1990-05-01", sex: "M" });
+    await writer.me.submitFeeling({ text: "Fares double tomorrow", polarity: "bad", hashtag: "mrt" });
+    const [candidate] = await world.app.candidates({ polarity: "bad", hashtag: "mrt" });
+    const admin = (await world.signUpAdmin(ADMIN)).me.asAdmin();
+    await admin.approve(candidate!.id);
+    world.clock.set("2026-11-13T00:00:00+08:00");
+    expect(await world.app.sharePreview("2026-11-13", "bad")).toMatchObject({ corrected: false });
+
+    await admin.setCorrectionNotice(candidate!.id, "Fares are not changing.");
+    const corrected = await world.app.sharePreview("2026-11-13", "bad");
+    expect(corrected).toMatchObject({ text: "Fares double tomorrow", corrected: true });
+    // The notice's own words are on the page the link opens, not in the preview.
+    expect(JSON.stringify(corrected)).not.toContain("not changing");
+    expect(await world.app.published("2026-11-13", "bad")).toMatchObject({ correctionNotice: "Fares are not changing." });
+
+    await admin.setCorrectionNotice(candidate!.id, "");
+    expect(await world.app.sharePreview("2026-11-13", "bad")).toMatchObject({ corrected: false });
   });
 
   it("works for today's Feeling of the Day, and for one being carried over under the day it was chosen", async () => {

@@ -70,29 +70,38 @@ export function createModeration({ db, clock }: { db: Db; clock: Clock }) {
       }
       const notACandidate = () => new ReportError("NOT_A_CANDIDATE", "That Feeling can no longer be Reported. Refresh to see today's.");
       if (typeof feelingId !== "string" || !UUID.test(feelingId)) throw notACandidate();
-      const hidden = await db
-        .update(schema.feelings)
-        .set({ reportedAt: now })
-        .where(
-          and(
-            eq(schema.feelings.id, feelingId),
-            eq(schema.feelings.cycle, cycle),
-            sql`${schema.feelings.submitterId} IS NOT NULL AND ${schema.feelings.submitterId} <> ${reporter.id}::uuid`,
-            isNull(schema.feelings.removedAt),
-            isNull(schema.feelings.reportedAt),
-          ),
+      // One statement: hiding it, queuing the Report, voiding tomorrow's Approval and the record of it
+      // all happen or none does, so a Feeling can't end up hidden with nobody told. Two taps at once
+      // leave one Report.
+      const when = now.toISOString();
+      const result = await db.execute(sql`
+        WITH hidden AS (
+          UPDATE ${schema.feelings} AS feeling SET reported_at = ${when}::timestamptz
+          WHERE feeling.id = ${feelingId}::uuid AND feeling.cycle = ${cycle}::date
+            AND feeling.submitter_id IS NOT NULL AND feeling.submitter_id <> ${reporter.id}::uuid
+            AND feeling.removed_at IS NULL AND feeling.reported_at IS NULL
+          RETURNING feeling.id
+        ), queued AS (
+          INSERT INTO ${schema.reports} (feeling_id, reporter_id, created_at)
+          SELECT id, ${reporter.id}::uuid, ${when}::timestamptz FROM hidden
+          RETURNING id
+        ), voided AS (
+          DELETE FROM ${schema.feelingsOfTheDay} AS day
+          WHERE day.feeling_id IN (SELECT id FROM hidden) AND day.cycle = ${nextCycle(cycle)}::date
+          RETURNING day.feeling_id
+        ), recorded AS (
+          INSERT INTO ${schema.auditLog} (at, actor_id, action, feeling_id)
+          SELECT ${when}::timestamptz, ${reporter.id}::uuid, 'report', id FROM hidden
+          RETURNING id
         )
-        .returning({ id: schema.feelings.id });
-      if (hidden.length === 0) {
-        const [feeling] = await db.select().from(schema.feelings).where(eq(schema.feelings.id, feelingId));
-        if (feeling?.cycle === cycle && feeling.submitterId === reporter.id) throw new ReportError("OWN_FEELING", "That's your own Feeling.");
-        // Already under review: someone else got there first, and one Report is enough.
-        if (feeling?.cycle === cycle && feeling.reportedAt && !feeling.removedAt) return;
-        throw notACandidate();
-      }
-      await db.insert(schema.reports).values({ feelingId, reporterId: reporter.id, createdAt: now });
-      await db.delete(schema.feelingsOfTheDay).where(and(eq(schema.feelingsOfTheDay.feelingId, feelingId), eq(schema.feelingsOfTheDay.cycle, nextCycle(cycle))));
-      await record(reporter.id, "report", feelingId);
+        SELECT id FROM hidden
+      `);
+      if ((result as unknown as { rows: unknown[] }).rows.length > 0) return;
+      const [feeling] = await db.select().from(schema.feelings).where(eq(schema.feelings.id, feelingId));
+      if (feeling?.cycle === cycle && feeling.submitterId === reporter.id) throw new ReportError("OWN_FEELING", "That's your own Feeling.");
+      // Already under review: someone else got there first, and one Report is enough.
+      if (feeling?.cycle === cycle && feeling.reportedAt && !feeling.removedAt) return;
+      throw notACandidate();
     },
 
     /** The Admin's queue: Feelings with an open Report, oldest first. */
@@ -123,24 +132,35 @@ export function createModeration({ db, clock }: { db: Db; clock: Clock }) {
      */
     async clearReport(adminId: string, feelingId: string, options: { timeoutDays?: number } = {}): Promise<void> {
       const now = clock.now();
-      const open = UUID.test(String(feelingId))
-        ? await db
-            .update(schema.reports)
-            .set({ outcome: "innocent", resolvedAt: now })
-            .where(and(eq(schema.reports.feelingId, feelingId), isNull(schema.reports.outcome)))
-            .returning({ reporterId: schema.reports.reporterId })
-        : [];
-      if (open.length === 0) throw new ModerationError("NOT_REPORTED", "That Feeling has no open Report.");
-      await db.update(schema.feelings).set({ reportedAt: null }).where(eq(schema.feelings.id, feelingId));
-      const days = Math.min(Math.max(0, options.timeoutDays ?? DEFAULT_TIMEOUT_DAYS), 365);
-      const reporterId = open[0]!.reporterId;
-      if (days > 0 && reporterId) {
-        await db
-          .update(schema.users)
-          .set({ reportingTimedOutUntil: new Date(now.getTime() + days * DAY_MS) })
-          .where(eq(schema.users.id, reporterId));
-      }
-      await record(adminId, "report-cleared", feelingId, days > 0 ? `Timeout of ${days} day${days === 1 ? "" : "s"}` : "No Timeout");
+      if (typeof feelingId !== "string" || !UUID.test(feelingId)) throw new ModerationError("NOT_REPORTED", "That Feeling has no open Report.");
+      const days = Math.min(Math.max(0, options.timeoutDays ?? DEFAULT_TIMEOUT_DAYS), 365) || 0;
+      const when = now.toISOString();
+      const until = new Date(now.getTime() + days * DAY_MS).toISOString();
+      const detail = days > 0 ? `Timeout of ${days} day${days === 1 ? "" : "s"}` : "No Timeout";
+      // One statement: if any part fails the Report stays open, so the Admin can simply try again
+      // instead of being left with a Feeling that is hidden and no longer in the queue.
+      const result = await db.execute(sql`
+        WITH settled AS (
+          UPDATE ${schema.reports} AS report SET outcome = 'innocent', resolved_at = ${when}::timestamptz
+          WHERE report.feeling_id = ${feelingId}::uuid AND report.outcome IS NULL
+          RETURNING report.reporter_id
+        ), restored AS (
+          UPDATE ${schema.feelings} AS feeling SET reported_at = NULL
+          WHERE feeling.id = ${feelingId}::uuid AND EXISTS (SELECT 1 FROM settled)
+          RETURNING feeling.id
+        ), timed AS (
+          UPDATE ${schema.users} AS reporter SET reporting_timed_out_until = ${until}::timestamptz
+          WHERE reporter.id IN (SELECT reporter_id FROM settled) AND ${days}::int > 0
+          RETURNING reporter.id
+        ), recorded AS (
+          INSERT INTO ${schema.auditLog} (at, actor_id, action, feeling_id, detail)
+          SELECT ${when}::timestamptz, ${adminId}::uuid, 'report-cleared', ${feelingId}::uuid, ${detail}::text
+          FROM (SELECT DISTINCT 1 FROM settled) AS one
+          RETURNING id
+        )
+        SELECT reporter_id FROM settled
+      `);
+      if ((result as unknown as { rows: unknown[] }).rows.length === 0) throw new ModerationError("NOT_REPORTED", "That Feeling has no open Report.");
     },
 
     /**
@@ -162,6 +182,8 @@ export function createModeration({ db, clock }: { db: Db; clock: Clock }) {
         .where(and(eq(schema.reports.feelingId, feelingId), isNull(schema.reports.outcome)));
 
       const days = await db.select().from(schema.feelingsOfTheDay).where(eq(schema.feelingsOfTheDay.feelingId, feelingId));
+      /** What took the place of a Feeling that was showing, for the record. */
+      const replacements: string[] = [];
       for (const day of days) {
         const [showing] = await db
           .select({ cycle: max(schema.feelingsOfTheDay.cycle) })
@@ -172,8 +194,18 @@ export function createModeration({ db, clock }: { db: Db; clock: Clock }) {
         const thisDay = and(eq(schema.feelingsOfTheDay.cycle, day.cycle), eq(schema.feelingsOfTheDay.polarity, day.polarity));
         if (successor) await db.update(schema.feelingsOfTheDay).set({ feelingId: successor }).where(thisDay);
         else await db.delete(schema.feelingsOfTheDay).where(thisDay);
+        if (isShowingNow) {
+          if (successor) replacements.push(`Replaced by ${successor}`);
+          else {
+            const [carried] = await db
+              .select({ cycle: max(schema.feelingsOfTheDay.cycle) })
+              .from(schema.feelingsOfTheDay)
+              .where(and(eq(schema.feelingsOfTheDay.polarity, day.polarity), lte(schema.feelingsOfTheDay.cycle, today)));
+            replacements.push(carried?.cycle ? "The Carry-over now shows" : "Nothing is showing in its place");
+          }
+        }
       }
-      await record(adminId, "take-down", feelingId);
+      await record(adminId, "take-down", feelingId, replacements.length > 0 ? replacements.join("; ") : null);
     },
 
     /** Attaches a notice to a Feeling, shown wherever it is published; an empty notice lifts it. */

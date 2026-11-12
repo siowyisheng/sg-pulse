@@ -39,6 +39,8 @@ export interface SharePreview {
   text: string;
   hashtag: string;
   polarity: Polarity;
+  /** Whether an Admin has attached a correction notice, so a corrected Feeling isn't passed around looking clean. */
+  corrected: boolean;
 }
 
 export interface FeelingsOfTheDay {

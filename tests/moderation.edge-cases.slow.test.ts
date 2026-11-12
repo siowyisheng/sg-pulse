@@ -263,3 +263,68 @@ describe("the audit log", () => {
     expect(log[4]).toMatchObject({ actorId: reporter.userId, feelingId: world.ids.Reported });
   });
 });
+
+describe("an action that writes in several places", () => {
+  it.each(["reports", "audit_log"] as const)("leaves a Candidate visible, and its Approval standing, when a Report can't be recorded in %s", async (table) => {
+    const world = await worldWith({ First: 3, Second: 1 });
+    await world.admin.approve(world.ids.First!);
+    const reporter = await world.newUser();
+    const letThrough = await world.refuseWritesTo(table);
+    await expect(reporter.report(world.ids.First!)).rejects.toThrow();
+    await letThrough();
+
+    // Nothing was done by halves: it still shows, it has no Report waiting, and tomorrow's Approval stands.
+    expect(await world.browsing()).toEqual(["First", "Second"]);
+    expect(await world.admin.reports()).toEqual([]);
+    expect((await world.admin.approvalChoices()).good.approvedId).toBe(world.ids.First);
+    // And the same Report works once storage is back.
+    await reporter.report(world.ids.First!);
+    expect(await world.browsing()).toEqual(["Second"]);
+    expect(await world.admin.reports()).toHaveLength(1);
+  });
+
+  it("leaves a Report open, to be tried again, when it can't be cleared", async () => {
+    const world = await worldWith({ Reported: 0 });
+    const { me: reporter, session } = await world.signUp(person(900));
+    await reporter.report(world.ids.Reported!);
+    const letThrough = await world.refuseWritesTo("audit_log");
+    await expect(world.admin.clearReport(world.ids.Reported!)).rejects.toThrow();
+    await letThrough();
+
+    // Still hidden, still waiting, and the reporter not yet timed out: the Admin isn't left with a
+    // Feeling that is hidden and no longer in the queue.
+    expect(await world.browsing()).toEqual([]);
+    expect(await world.admin.reports()).toHaveLength(1);
+    expect((await world.app.authenticate(session.token))!.reportingTimedOutUntil).toBeNull();
+
+    await world.admin.clearReport(world.ids.Reported!);
+    expect(await world.browsing()).toEqual(["Reported"]);
+    expect(await world.admin.reports()).toEqual([]);
+    // A request after this one sees the Timeout.
+    const later = (await world.app.authenticate(session.token))!;
+    expect(later.reportingTimedOutUntil).not.toBeNull();
+    await expect(later.report(world.ids.Reported!)).rejects.toMatchObject({ code: "TIMED_OUT" });
+  });
+});
+
+describe("the audit log of a Take-down", () => {
+  it("says what took the Feeling's place", async () => {
+    const world = await worldWith({ Winner: 3, "Runner-up": 2 });
+    await world.admin.approve(world.ids.Winner!);
+    world.clock.set("2026-11-13T10:00:00+08:00");
+    await world.admin.takeDown((await world.app.feelingsOfTheDay()).good!.id);
+    expect((await world.admin.auditLog())[0]).toMatchObject({ action: "take-down", detail: `Replaced by ${world.ids["Runner-up"]}` });
+  });
+
+  it("says when the Carry-over, or nothing, took its place, and says nothing for a Candidate", async () => {
+    const world = await worldWith({ Only: 1, Plain: 0 });
+    await world.app.operator.scheduleSeedFeeling({ cycle: "2026-11-12", polarity: "good", text: "Thursday's Feeling", hashtag: "seed" });
+    await world.admin.takeDown(world.ids.Plain!);
+    expect((await world.admin.auditLog())[0]).toMatchObject({ action: "take-down", detail: null });
+
+    await world.admin.approve(world.ids.Only!);
+    world.clock.set("2026-11-13T10:00:00+08:00");
+    await world.admin.takeDown((await world.app.feelingsOfTheDay()).good!.id);
+    expect((await world.admin.auditLog())[0]).toMatchObject({ action: "take-down", detail: "The Carry-over now shows" });
+  });
+});

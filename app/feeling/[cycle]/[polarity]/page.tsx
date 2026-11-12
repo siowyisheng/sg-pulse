@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const feeling = await find(params);
   if (!feeling) return { title: "Yah Lah" };
   const title = `${POLARITY_LABEL[feeling.polarity]} Feeling of the Day, ${formatCycle(feeling.cycle)} · Yah Lah`;
-  const description = `${feeling.text} #${feeling.hashtag}`;
+  const description = `${feeling.text} #${feeling.hashtag}${feeling.correctionNotice ? ` (Correction notice: ${feeling.correctionNotice})` : ""}`;
   return { title, description, openGraph: { title, description, siteName: "Yah Lah", type: "article" }, twitter: { card: "summary_large_image", title, description } };
 }
 

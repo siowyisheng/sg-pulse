@@ -3,8 +3,8 @@ import { colors } from "./tokens";
 
 /**
  * The picture shown when a Feeling of the Day's link is shared: its text and Hashtag, and nothing
- * about who wrote it. Drawn for the image renderer, which takes only inline styles; every colour
- * still comes from the tokens.
+ * about who wrote it, plus a line when an Admin has attached a correction notice. Drawn for the
+ * image renderer, which takes only inline styles; every colour still comes from the tokens.
  */
 export const SHARE_CARD_SIZE = { width: 1200, height: 630 } as const;
 
@@ -26,6 +26,9 @@ export function ShareCard({ preview }: { preview: SharePreview }) {
         </div>
         <div style={{ marginTop: 32, fontSize: preview.text.length > 60 ? 60 : 76, fontWeight: 700, lineHeight: 1.2 }}>{preview.text}</div>
         <div style={{ marginTop: 32, fontSize: 44, fontWeight: 700, color: accent }}>{`#${preview.hashtag}`}</div>
+        {preview.corrected && (
+          <div style={{ display: "flex", marginTop: 24, fontSize: 28, fontWeight: 700, color: palette.ink }}>Correction notice attached: see the link</div>
+        )}
       </div>
     </div>
   );

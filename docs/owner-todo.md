@@ -104,6 +104,7 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] An Admin sees an "Admin: take down" button on every Candidate. It is one tap with no confirmation.
 - [ ] A share link opens a page for that one Feeling, which shows the Byline as the front page does. Only the preview image and the link text leave the Byline out.
 - [ ] The preview image is drawn in a plain built-in font, not the site's fonts, and a Feeling written in Chinese, Tamil or another non-Latin script may show as empty boxes in it.
+- [ ] A Feeling with a correction notice shows "Correction notice attached: see the link" on its preview image, and the notice in the link's description. The notice itself is not drawn on the image.
 - [ ] Share links use `https://sg-pulse.vercel.app` (Vercel's production address). Set `SITE_URL` in Vercel if you move to your own domain.
 - [ ] The audit log records Reports and every Admin action, and nothing yet reads it on screen or trims it at 12 months: both are part of #18.
 
