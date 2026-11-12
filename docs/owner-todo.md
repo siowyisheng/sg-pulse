@@ -67,6 +67,10 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [X] The consent screen is shown at first login (as ticket #6 says), not at first submission (as the spec #1 says). A short reminder shows at every submission.
 - [X] A Feeling may not contain a link, and line breaks become spaces.
 - [X] The "+" for writing a Feeling is in the header for now; it moves to the voting screen with #10.
+- [ ] With #10 the "+" has moved: it floats at the bottom right of the voting screen. A Visitor who taps it is taken to log in.
+- [ ] When a Hashtag has more than 10 Candidates, the 10 shown are a random pick each time, with a "Show another mix" link. The top, Rising and New mix replaces this in #12.
+- [ ] The front page snaps firmly between the Feelings of the Day and the voting screen: a short swipe springs back, a longer one moves on.
+- [ ] Someone whose Singpass account has no Myinfo profile is told "Singpass has no Myinfo details for you, so we can't set up your Byline."
 
 ## Later, whenever you like
 
