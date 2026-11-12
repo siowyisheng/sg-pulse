@@ -30,7 +30,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 ## Switching on the daily notification (ticket #19)
 
 - [ ] Run `npm run push:keys`. It writes the private key to `.env.push-keys.local` and prints the public key.
-- [ ] In Vercel, set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (the public key), `VAPID_PRIVATE_KEY` (the private one) and `VAPID_SUBJECT` (`mailto:` and your email), then redeploy. Delete the key file. Until all are set the site offers no opt-in; with only one set, the site refuses to start and says which is missing.
+- [ ] In Vercel, set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (the public key), `VAPID_PRIVATE_KEY` (the private one) and `VAPID_SUBJECT` (`mailto:` then an address you check, e.g. `mailto:you@example.com`; push services use it to reach you), then redeploy. Delete the key file. Until all are set the site offers no opt-in; with only one set, the site refuses to start and says which is missing.
 - [ ] Make sure `CRON_SECRET` is set (the same one the Approval reminder uses). Vercel then calls `/api/cron/morning` at 07:00 Singapore time. On Hobby a job can run up to an hour late.
 - [ ] Try it on a real phone: log in, accept the prompt, then call `/api/cron/morning` with `Authorization: Bearer <CRON_SECRET>` and see the notification arrive. On an iPhone it only works once Yah Lah is added to the Home Screen.
 - [ ] Hobby allows two scheduled jobs and the site now uses both (the Approval reminder and the morning job). A third needs Pro, or its work has to go into one of these.
@@ -38,7 +38,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 ## When someone asks for a Feeling to be removed, or deletes their account (ticket #18)
 
 - [ ] Look at "Removal requests" at the top of `/admin` at least daily: each has a "due by" time, 24 hours after it was asked. "Remove it" takes the Feeling off the front page and out of the archive.
-- [ ] Someone who deletes their account can tick a box to ask for their Feelings of the Day to be removed in the same go. If they don't, there is no way for them to ask afterwards, as Yah Lah has no contact channel: decide whether to publish an email address for that.
+- [ ] Someone who deletes their account can tick a box to ask for their Feelings of the Day to be removed in the same go. If they don't, there is no way for them to ask afterwards: you decided (13 Nov) not to publish a contact email.
 
 ## Every evening, from now on
 
@@ -122,7 +122,7 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] The audit log records Reports and every Admin action, and nothing yet reads it on screen or trims it at 12 months: both are part of #18.
 
 - [ ] A Take-down putting the next most-upvoted Feeling in place without your Approval is confirmed by you (13 Nov), so ADR 0002 should say so. Ask an agent to amend it.
-- [ ] Deleting an account removes that person's Upvotes, so the final count shown on a Feeling of the Day they voted for goes down by one. The winners themselves stay.
+- [ ] Deleting an account removes that person's Upvotes, so the final count shown on a Feeling of the Day they voted for goes down by one. The winners themselves stay. You accepted this (13 Nov).
 - [ ] The log kept for 12 months is the audit log. A Report's own row (who Reported what) is not trimmed yet, and a deleted account's Reports stay without their reporter. The submission line is written just after the Feeling is saved, so a crash in between could leave a Feeling unlogged.
 - [ ] A deleted account leaves a record in the log with its internal ID and no name, kept 12 months. The log is trimmed by the morning job; an Admin screen to read it is not built.
 - [ ] The daily notification leaves out nothing yet. When Election Mode (#16) is built it must hide held Hashtags from the push as well.
