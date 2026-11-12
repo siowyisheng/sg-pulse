@@ -22,7 +22,7 @@ describe("from a Feeling to the Feeling of the Day", () => {
     expect((await app.feelingsOfTheDay()).good).toBeNull();
 
     clock.set("2026-11-13T00:00:00+08:00");
-    expect((await app.feelingsOfTheDay()).good).toEqual({
+    expect((await app.feelingsOfTheDay()).good).toMatchObject({
       polarity: "good",
       text: "Got a seat on the train",
       hashtag: "mrt",

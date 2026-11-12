@@ -5,6 +5,7 @@ import { getApp } from "@/composition";
 import { CANDIDATES_SHOWN } from "@/core/feelings";
 import { PolarityBadge } from "@/ui/badges";
 import { Card } from "@/ui/card";
+import { formatMoment } from "@/web/format";
 import { decoded, POLARITY_LABEL, polarityFrom } from "@/web/polarity";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
@@ -45,7 +46,10 @@ export default async function HashtagScreen({ params }: Props) {
         </Card>
       )}
       {/* Keyed by what it shows, so "Show another mix" starts it afresh. */}
-      <CandidateList key={candidates.map((candidate) => candidate.id).join()} candidates={candidates} viewer={viewer} upvoteIsElsewhere={upvoteIsElsewhere} />
+      <CandidateList key={candidates.map((candidate) => candidate.id).join()} candidates={candidates} viewer={viewer} upvoteIsElsewhere={upvoteIsElsewhere}
+        isAdmin={me?.isAdmin ?? false}
+        {...(me?.reportingTimedOutUntil ? { reportingOffUntil: formatMoment(me.reportingTimedOutUntil) } : {})}
+      />
       {upvoteIsElsewhere && (
         <p className="caption muted">
           Your Yah Lah today is on another Feeling: <a href="/me">see it</a>.

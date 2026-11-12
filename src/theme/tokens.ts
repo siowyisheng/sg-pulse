@@ -157,6 +157,7 @@ export const pairs: ColorPair[] = [
   { use: "Good mood on the voting screen", text: "goodText", background: "goodTint" },
   { use: "Bad mood on the voting screen", text: "badText", background: "badTint" },
   { use: "Write a Feeling button", text: "onSolid", background: "primary" },
+  { use: "Correction notice", text: "ink", background: "warningTint" },
   { use: "Form fields", text: "ink", background: "surface" },
   { use: "Form field border", text: "line", background: "surface", large: true },
 ];

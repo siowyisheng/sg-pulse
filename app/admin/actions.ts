@@ -57,3 +57,39 @@ export async function withdrawApprovalAction(polarity: Polarity): Promise<void> 
   await me.asAdmin().withdrawApproval(polarity);
   revalidatePath("/admin");
 }
+
+/** Clears a Report as innocent; `timeoutDays` 0 lets the reporter off. */
+export async function clearReportAction(feelingId: string, timeoutDays: number): Promise<void> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return;
+  try {
+    await me.asAdmin().clearReport(feelingId, { timeoutDays });
+  } catch (error) {
+    messageOf(error);
+  }
+  revalidatePath("/admin");
+}
+
+/** One click: the Feeling is gone, and what replaces it shows when the page reloads. */
+export async function takeDownAction(feelingId: string): Promise<void> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return;
+  try {
+    await me.asAdmin().takeDown(feelingId);
+  } catch (error) {
+    messageOf(error);
+  }
+  revalidatePath("/admin");
+}
+
+export async function setCorrectionNoticeAction(feelingId: string, _previous: FormState, form: FormData): Promise<FormState> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return NOT_ADMIN;
+  try {
+    await me.asAdmin().setCorrectionNotice(feelingId, String(form.get("notice") ?? ""));
+  } catch (error) {
+    return { message: messageOf(error) };
+  }
+  revalidatePath("/admin");
+  return { message: "Saved." };
+}

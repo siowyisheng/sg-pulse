@@ -55,3 +55,7 @@ export class AdminError extends UserFacingError<"NOT_ADMIN"> {}
 export class UpvoteError extends UserFacingError<"NOT_A_CANDIDATE" | "OWN_FEELING"> {}
 
 export class ApprovalError extends UserFacingError<"NOT_A_CHOICE"> {}
+
+export class ReportError extends UserFacingError<"NOT_A_CANDIDATE" | "OWN_FEELING" | "TIMED_OUT"> {}
+
+export class ModerationError extends UserFacingError<"NO_SUCH_FEELING" | "NOT_REPORTED" | "NOTICE_TOO_LONG"> {}

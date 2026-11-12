@@ -1,4 +1,4 @@
-import { boolean, date, doublePrecision, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, date, doublePrecision, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const polarity = pgEnum("polarity", ["good", "bad"]);
 
@@ -21,6 +21,12 @@ export const feelings = pgTable(
      */
     risingScore: doublePrecision("rising_score").notNull().default(0),
     risingAt: timestamp("rising_at", { withTimezone: true }),
+    /** Set while a Report on it is open: hidden from browsing until an Admin clears or removes it. */
+    reportedAt: timestamp("reported_at", { withTimezone: true }),
+    /** Taken down by an Admin: gone from everywhere, for good. */
+    removedAt: timestamp("removed_at", { withTimezone: true }),
+    /** A notice an Admin has attached, shown wherever the Feeling is published. */
+    correctionNotice: text("correction_notice"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => [uniqueIndex("feelings_one_per_submitter_per_cycle").on(table.submitterId, table.cycle)],
@@ -53,6 +59,8 @@ export const users = pgTable("users", {
   dateOfBirth: date("date_of_birth", { mode: "string" }).notNull(),
   /** The operator of the site. Set by hand (npm run admin), never from the site itself. */
   isAdmin: boolean("is_admin").notNull().default(false),
+  /** A Timeout: they can't Report until this moment. Nothing else is restricted. */
+  reportingTimedOutUntil: timestamp("reporting_timed_out_until", { withTimezone: true }),
   /** When they agreed to what becomes public. */
   consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -120,4 +128,32 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+/** A User's flag that a Feeling is inappropriate, and how the Admin settled it. */
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    feelingId: uuid("feeling_id")
+      .notNull()
+      .references(() => feelings.id, { onDelete: "cascade" }),
+    reporterId: uuid("reporter_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    /** Null while open; then "innocent" (cleared) or "removed". */
+    outcome: text("outcome").$type<"innocent" | "removed">(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (table) => [index("reports_by_feeling").on(table.feelingId)],
+);
+
+/** What was done, by whom and when: Reports and Admin actions. Rows are only ever added. */
+export const auditLog = pgTable("audit_log", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+  /** No reference to users: the record outlives an account. */
+  actorId: uuid("actor_id"),
+  action: text("action").notNull(),
+  feelingId: uuid("feeling_id"),
+  detail: text("detail"),
 });

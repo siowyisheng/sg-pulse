@@ -7,6 +7,7 @@ import { colors, tokensCss } from "@/theme/tokens";
 import { BylineChip } from "@/ui/badges";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
+import { siteUrl } from "@/web/site";
 import "./globals.css";
 
 // next/font serves the files from our own domain and sizes the fallback font to match, so text
@@ -15,6 +16,7 @@ const inter = localFont({ src: "./fonts/inter-latin-wght-normal.woff2", variable
 const jakarta = localFont({ src: "./fonts/plus-jakarta-sans-latin-wght-normal.woff2", variable: "--font-jakarta", weight: "200 800", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "Yah Lah",
   description: "How's Singapore feeling today? One Good and one Bad Feeling a day.",
   openGraph: { siteName: "Yah Lah", type: "website" },

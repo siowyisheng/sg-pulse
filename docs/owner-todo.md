@@ -2,11 +2,11 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 13 Nov 2026, after tickets #2, #5 to #13 and #20.
+Last updated: 13 Nov 2026, after tickets #2, #5 to #15, #17 and #20. #16 (Election Mode) is deferred.
 
 ## After every push that changes the database
 
-- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0004_approval_rising_and_push.sql` (tickets #12 and #13): until it is run, the front page, the Hashtag screen and Yah Lah all fail on the live site.
+- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0005_moderation.sql` (tickets #14, #15 and #17): until it is run, the front page and most other pages fail on the live site.
 
 ## Every day, until the Admin area can be used on the live site
 
@@ -15,7 +15,17 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #13 and #20.
 
 ## Housekeeping on GitHub
 
-- [ ] Try the Approval section at the top of `/admin` and the new mix of Candidates, then close #12 and #13. Closing #13 unblocks #14 (Report, Take-down and Timeout), #15 (correction notices), #16 (Election Mode) and #17 (archive and share cards).
+- [ ] Try Reports, Take-down, correction notices, the archive and sharing, then close #14, #15 and #17. Closing #14 unblocks #18 (removal on request, account deletion and the audit log).
+- [ ] #16 (Election Mode) is deferred at your say-so, as the next election is not expected until 2030. Two things hang on it:
+  - #19 (installable PWA and the daily push) is marked as blocked by #16 on GitHub. It only needs #16 to leave held Hashtags out of the push. To build #19 now, say so, and it will be built without that part.
+  - Until #19 exists there are no pushes, so nothing reminds you to approve each evening.
+  - An election can be called early. Build #16 before one is, and ask the lawyer which topics it must hold.
+
+## When something is Reported, or a direction arrives
+
+- [ ] Look at `/admin` at least daily. A Reported Feeling stays hidden until you put it back or remove it, and one still waiting at midnight can't win.
+- [ ] For a correction direction (POFMA or similar): `/admin`, "Showing now", type the notice, Save. It shows on the Feeling on the front page, in the archive and on its share page.
+- [ ] To take a published Feeling down: `/admin`, "Showing now", "Take down now". It is one click, immediate and can't be undone. For an older one that is only in the archive, ask an agent: there is no button for those yet.
 
 ## Every evening, from now on
 
@@ -86,6 +96,17 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] The top three include Candidates with no Yah Lahs when fewer than three have any (earliest written first), so there is always something to approve.
 - [ ] The mix of 10: the 5 with the most Yah Lahs, then 3 Rising (at least 2 Yah Lahs, and at least half of them still "fresh", where freshness halves every 3 hours), then 2 New (0 or 1 Yah Lahs, picked at random so they take turns). A group that is short gives its places to New ones, then to the next most upvoted.
 - [ ] Moving a Yah Lah away and back to the same Candidate counts as a fresh Yah Lah for "Rising" each time. One person could nudge a Candidate into the Rising places that way; it does not change any count.
+- [ ] When a published Feeling of the Day is taken down, the next most-upvoted Feeling of its day replaces it at once, without your Approval. This follows tickets #14 and #15 but cuts across ADR 0002 (the Admin approves each winner). The alternative is to fall back to the Carry-over every time and let you approve a replacement by hand.
+- [ ] A Report on the Candidate you approved for tomorrow voids the Approval straight away. Put it back before midnight and approve it again, or it can't win. Anyone can do this at 23:55; the cost to them is the Timeout.
+- [ ] A Reported Feeling keeps its Yah Lahs but takes no new ones while it is under review.
+- [ ] Reporting takes two taps: "Report", then "Report it" under a line saying what will happen. Visitors don't see the button; Users can't Report their own Feeling.
+- [ ] "Put it back" gives the reporter a one-week Timeout; "Put it back, no Timeout" lets them off.
+- [ ] An Admin sees an "Admin: take down" button on every Candidate. It is one tap with no confirmation.
+- [ ] A share link opens a page for that one Feeling, which shows the Byline as the front page does. Only the preview image and the link text leave the Byline out.
+- [ ] The preview image is drawn in a plain built-in font, not the site's fonts, and a Feeling written in Chinese, Tamil or another non-Latin script may show as empty boxes in it.
+- [ ] A Feeling with a correction notice shows "Correction notice attached: see the link" on its preview image, and the notice in the link's description. The notice itself is not drawn on the image.
+- [ ] Share links use `https://sg-pulse.vercel.app` (Vercel's production address). Set `SITE_URL` in Vercel if you move to your own domain.
+- [ ] The audit log records Reports and every Admin action, and nothing yet reads it on screen or trims it at 12 months: both are part of #18.
 
 ## Later, whenever you like
 

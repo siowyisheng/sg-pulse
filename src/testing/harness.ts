@@ -31,12 +31,21 @@ function migratedDatabase() {
   return sharedDatabase;
 }
 
-/** Back to freshly migrated: all rows gone, and the counters restarted. */
+/**
+ * Back to freshly migrated: all rows gone, and the counters restarted, plus any triggers or
+ * functions a test made to simulate a failure (the migrations create neither).
+ */
 async function emptyTheDatabase(client: PGlite) {
   await client.exec(`
     DO $$
-    DECLARE tables text;
+    DECLARE r record; tables text;
     BEGIN
+      FOR r IN SELECT t.tgname, c.relname FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid WHERE NOT t.tgisinternal LOOP
+        EXECUTE format('DROP TRIGGER %I ON %I', r.tgname, r.relname);
+      END LOOP;
+      FOR r IN SELECT p.oid::regprocedure AS signature FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace LOOP
+        EXECUTE 'DROP FUNCTION ' || r.signature;
+      END LOOP;
       SELECT string_agg(format('%I', tablename), ', ') INTO tables FROM pg_tables WHERE schemaname = 'public';
       EXECUTE 'TRUNCATE ' || tables || ' RESTART IDENTITY CASCADE';
     END $$;
@@ -99,5 +108,21 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return Object.fromEntries(counted.rows.map((row) => [row.text, row.upvotes]));
   }
 
-  return { app, clock, webPush, random, tally, logIn, signUp, signUpAdmin, everythingStored };
+  /**
+   * Makes the storage refuse to write a row to this table, as a failing connection would, so a test
+   * can check that an action that writes in several places leaves nothing half done. Returns the
+   * function that lets writes through again.
+   */
+  async function refuseWritesTo(table: "reports" | "audit_log" | "feelings_of_the_day" | "users" | "feelings"): Promise<() => Promise<void>> {
+    const name = `refuse_${table}`;
+    await client.exec(`
+      CREATE FUNCTION ${name}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'storage refused a write to ${table}'; END $$;
+      CREATE TRIGGER ${name} BEFORE INSERT OR UPDATE OR DELETE ON "${table}" FOR EACH ROW EXECUTE FUNCTION ${name}();
+    `);
+    return async () => {
+      await client.exec(`DROP TRIGGER ${name} ON "${table}"; DROP FUNCTION ${name}();`);
+    };
+  }
+
+  return { app, clock, webPush, random, tally, logIn, signUp, signUpAdmin, everythingStored, refuseWritesTo };
 }

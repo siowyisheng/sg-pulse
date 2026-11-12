@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import type { MyFeeling } from "@/core/app";
 import { bylineText } from "@/core/byline";
 import { isDemoMode } from "@/demo-flag";
-import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip, YourYahLahChip } from "@/ui/badges";
+import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip, UnderReviewChip, YourYahLahChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
-import { formatCycle } from "@/web/format";
+import { formatCycle, formatMoment } from "@/web/format";
 import { currentMe } from "@/web/session";
 import { signOutAction } from "../auth-actions";
 import { becomeAdminInDemoAction } from "../demo/actions";
@@ -23,6 +23,10 @@ function State({ feeling }: { feeling: MyFeeling }) {
       return <StateChip>Candidate today</StateChip>;
     case "winner":
       return <StateChip>Feeling of the Day</StateChip>;
+    case "under-review":
+      return <UnderReviewChip />;
+    case "removed":
+      return <StateChip>Removed by an Admin</StateChip>;
     case "expired":
       return <StateChip>Expired</StateChip>;
   }
@@ -42,6 +46,13 @@ export default async function MyFeelings() {
       {submission.canSubmit && (
         <p>
           <a href="/submit">Write a Feeling{submission.queued ? " for tomorrow" : ""}</a>
+        </p>
+      )}
+      {me.reportingTimedOutUntil && (
+        <p className="notice" role="note">
+          <span>
+            You can&apos;t Report until {formatMoment(me.reportingTimedOutUntil)}, because a Feeling you Reported was found to be fine. Everything else works as usual.
+          </span>
         </p>
       )}
       <h2>My Yah Lah today</h2>

@@ -46,22 +46,24 @@ async function build(): Promise<App> {
   const db = drizzle(new PGlite(), { schema });
   await migrate(db, { migrationsFolder: "./drizzle" });
   // While the samples go in it is noon, so they are Candidates today even when the demo starts after 21:00.
-  let settingUp = true;
+  // The past week's Feelings go in as if it were a week ago, so the archive has something in it.
   const noon = new Date(`${cycleOf(new Date())}T12:00:00+08:00`);
-  const clock = { now: () => (settingUp ? noon : new Date()) };
+  let pretend: Date | null = new Date(noon.getTime() - 7 * DAY_MS);
+  const clock = { now: () => pretend ?? new Date() };
   const app = createApp({
     db,
     clock,
     singpass: createFakeSingpass(),
     webPush: { send: async (_subscription, payload) => console.log(`[demo] push: ${payload.title}: ${payload.body}`) },
   });
-  // Today and the next fortnight, so the demo can be left running past midnight.
-  for (let day = 0; day < 14; day++) {
-    const cycle = cycleOf(new Date(clock.now().getTime() + day * DAY_MS));
-    const sample = SAMPLES[day % SAMPLES.length]!;
+  // The past week, today and the next fortnight, so the demo can be left running past midnight.
+  for (let day = -7; day < 14; day++) {
+    const cycle = cycleOf(new Date(noon.getTime() + day * DAY_MS));
+    const sample = SAMPLES[(day + 7) % SAMPLES.length]!;
     await app.operator.scheduleSeedFeeling({ cycle, polarity: "good", text: sample.good[0], hashtag: sample.good[1] });
     await app.operator.scheduleSeedFeeling({ cycle, polarity: "bad", text: sample.bad[0], hashtag: sample.bad[1] });
   }
+  pretend = noon;
   const writers: Me[] = [];
   for (const [index, [name, dateOfBirth, sex, polarity, hashtag, text]] of CANDIDATES.entries()) {
     const { state } = await app.startSingpass();
@@ -77,7 +79,7 @@ async function build(): Promise<App> {
     const choice = liked.find((candidate) => candidate.text !== CANDIDATES[index]![5]);
     if (choice) await voter.upvote(choice.id).catch(() => undefined);
   }
-  settingUp = false;
+  pretend = null;
   return app;
 }
 
