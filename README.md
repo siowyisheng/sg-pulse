@@ -9,7 +9,7 @@ npm install
 npm run demo
 ```
 
-Demo mode needs no database or `.env.local`: it runs on an in-memory Postgres with sample Seed Feelings. Open http://localhost:3000.
+Demo mode needs no database or `.env.local`: it runs on an in-memory Postgres with sample Seed Feelings. Open http://localhost:3000. Logging in goes through a fake Singpass page with made-up people; outside demo mode there is no way to log in until the real Singpass is connected.
 
 ## Checks
 
@@ -30,4 +30,8 @@ The look follows `docs/style-guide.md`; `/style-guide` shows the shared componen
 4. Until the Admin area exists, add each day's Seed Feelings by hand:
    `npm run seed -- 2026-11-13 good kopi "Kopi with the neighbours before work"`
 
-After a schema change, run `npm run db:generate` and commit the new file in `drizzle/`.
+After a schema change, run `npm run db:generate` and commit the new file in `drizzle/`. After pulling one, run `npm run db:migrate` against the live database.
+
+## Ads and the support link
+
+Both are off until their environment variables are set (see `.env.example`): `AD_NETWORK`, `ADSENSE_CLIENT` and `ADSENSE_SLOT` for the one ad slot below the Feelings of the Day, and `SUPPORT_URL` for the "Support Yah Lah" link. Set them in Vercel only once the plan allows commercial use.

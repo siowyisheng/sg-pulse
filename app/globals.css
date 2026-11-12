@@ -379,3 +379,161 @@ a {
 .swatch {
   background: var(--swatch);
 }
+
+/* Header actions */
+
+.site-header {
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-sm);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--type-body-bold-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-body-bold-line);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Ordinary pages: a column of headings and cards */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: var(--size-column);
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+ul.stack {
+  margin: 0;
+  padding-left: var(--space-lg);
+}
+
+ul.stack li {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.selectable {
+  user-select: all;
+}
+
+/* An error is an icon and a message with an outline, never a solid red block. */
+.problem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--color-error);
+  border-radius: var(--radius-button);
+}
+
+.problem svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-error);
+}
+
+/* Form fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+}
+
+.field input,
+.field select {
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-md);
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--type-body-line);
+}
+
+/* The ad slot: its space is set aside whether or not an ad has loaded. */
+
+.ad-slot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  /* Room around it, so a slip of the thumb near a button doesn't land on the ad. */
+  margin-top: var(--space-sm);
+}
+
+.ad-label {
+  color: var(--color-ink-muted);
+  font-size: var(--type-badge-size);
+  font-weight: var(--type-caption-weight);
+  line-height: var(--type-badge-line);
+  letter-spacing: var(--type-badge-tracking);
+  text-transform: uppercase;
+}
+
+.ad-frame {
+  width: var(--size-ad-width);
+  max-width: 100%;
+  height: var(--size-ad-height);
+  overflow: hidden;
+  border-radius: var(--space-xs);
+  background: var(--color-neutral-tint);
+}
+
+/* Below the fold */
+
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: var(--size-column);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch-target);
+  font-weight: var(--type-body-bold-weight);
+}

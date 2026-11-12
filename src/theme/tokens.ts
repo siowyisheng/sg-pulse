@@ -102,6 +102,9 @@ export const sizes = {
   header: "56px",
   /** The widest a column of reading gets. */
   column: "560px",
+  /** The ad slot: a standard mobile banner. */
+  adWidth: "320px",
+  adHeight: "50px",
 } as const;
 
 export const shadows = {
@@ -148,6 +151,9 @@ export const pairs: ColorPair[] = [
   { use: "Queued for tomorrow and Still feeling it chips", text: "ink", background: "neutralTint" },
   { use: "Under review chip and the demo banner", text: "ink", background: "warningTint" },
   { use: "Error outline and icon on a card", text: "error", background: "surface", large: true },
+  { use: "Error outline and icon on the page", text: "error", background: "background", large: true },
+  { use: "Form fields", text: "ink", background: "surface" },
+  { use: "Form field border", text: "line", background: "surface", large: true },
 ];
 
 const kebab = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);

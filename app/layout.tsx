@@ -2,7 +2,12 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { isDemoMode } from "@/demo-flag";
+import { bylineText } from "@/core/byline";
 import { colors, tokensCss } from "@/theme/tokens";
+import { BylineChip } from "@/ui/badges";
+import { currentMe } from "@/web/session";
+import { isSingpassConnected } from "@/web/singpass";
+import { signOutAction } from "./auth-actions";
 import "./globals.css";
 
 // next/font serves the files from our own domain and sizes the fallback font to match, so text
@@ -22,7 +27,8 @@ export const viewport: Viewport = {
   themeColor: colors.light.primary,
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const me = await currentMe();
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <head>
@@ -35,6 +41,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <img src="/brand/mark.png" alt="" width={32} height={32} />
             <span>Yah Lah</span>
           </a>
+          {me ? (
+            <form className="header-actions" action={signOutAction}>
+              <BylineChip>{bylineText(me.byline)}</BylineChip>
+              <button type="submit" className="header-link">
+                Log out
+              </button>
+            </form>
+          ) : (
+            isSingpassConnected() && (
+              <a className="header-link" href="/sign-in">
+                Log in
+              </a>
+            )
+          )}
         </header>
         {children}
       </body>

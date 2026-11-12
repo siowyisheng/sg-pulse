@@ -1,9 +1,9 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
-import { createFakeSingpass } from "@/adapters/fake-singpass";
+import { codeFor, createFakeSingpass } from "@/adapters/fake-singpass";
 import { createApp } from "@/core/app";
-import type { Singpass } from "@/core/ports";
+import type { Singpass, SingpassPerson } from "@/core/ports";
 import { schema } from "@/db";
 import { FakeClock, FakeWebPush } from "./fakes";
 
@@ -55,5 +55,27 @@ export async function createTestApp(options: TestAppOptions = {}) {
   const webPush = new FakeWebPush();
   const app = createApp({ db, clock, webPush, singpass: options.singpass ?? createFakeSingpass() });
 
-  return { app, clock, webPush };
+  /** A round trip to the fake Singpass as this person, in one browser. */
+  async function logIn(person: SingpassPerson) {
+    const { state } = await app.startSingpass();
+    return app.finishSingpass({ state, code: codeFor(person), browserState: state });
+  }
+
+  /** Logs this person in, agreeing on the consent screen if they are new. */
+  async function signUp(person: SingpassPerson) {
+    const login = await logIn(person);
+    const session = login.outcome === "signed-in" ? login.session : await app.confirmConsent(login.proof);
+    const me = await app.authenticate(session.token);
+    if (!me) throw new Error("The new session did not work");
+    return { session, me };
+  }
+
+  /** Every row of every table, as text: for checking that something was never written down. */
+  async function everythingStored(): Promise<string> {
+    const tables = await client.query<{ tablename: string }>("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+    const rows = await Promise.all(tables.rows.map(async ({ tablename }) => (await client.query(`SELECT * FROM "${tablename}"`)).rows));
+    return JSON.stringify(rows);
+  }
+
+  return { app, clock, webPush, logIn, signUp, everythingStored };
 }

@@ -25,3 +25,15 @@ export const isUserFacing = (error: unknown): error is UserFacingError<string> =
 export type FeelingErrorCode = "TEXT_EMPTY" | "TEXT_TOO_LONG" | "INVALID_HASHTAG" | "INVALID_CYCLE" | "ALREADY_CHOSEN";
 
 export class FeelingError extends UserFacingError<FeelingErrorCode> {}
+
+export const SINGPASS_MESSAGES = {
+  SINGPASS_EXPIRED: "Your Singpass login has expired. Please log in again.",
+  SINGPASS_FAILED: "Something went wrong with your Singpass login. Please try again.",
+  TOO_YOUNG: "You need to be 13 or older to take part in Yah Lah.",
+} as const;
+
+export type SingpassErrorCode = keyof typeof SINGPASS_MESSAGES;
+
+export class SingpassError extends UserFacingError<SingpassErrorCode> {}
+
+export const singpassError = (code: SingpassErrorCode) => new SingpassError(code, SINGPASS_MESSAGES[code]);

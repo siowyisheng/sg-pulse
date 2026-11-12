@@ -8,6 +8,13 @@
       "when": 1794481947519,
       "tag": "0000_feelings_of_the_day",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794483768440,
+      "tag": "0001_users_and_sessions",
+      "breakpoints": true
     }
   ]
 }
