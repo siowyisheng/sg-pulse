@@ -20,8 +20,8 @@ Last updated: 12 Nov 2026, after tickets #2, #5, #6, #8, #9 and #20.
 ## Singpass (ticket #3; blocks #7, the real login)
 
 - [ ] Register a Yah Lah app on the Singpass developer portal for staging: its own App ID, redirect URI (`https://<your domain>/singpass/callback`), signing and encryption keys, and the published keys endpoint.
-- [ ] Justify the `name`, `sex` and `dob` scopes (not email, mobile or NRIC) for showing a Byline beside each Feeling.
-- [ ] Email Singpass partner support early: is public display of initials, sex and age band an acceptable purpose? Record the answer on #3. A "no" forces a Byline redesign.
+- [X] Justify the `name`, `sex` and `dob` scopes (not email, mobile or NRIC) for showing a Byline beside each Feeling.
+- [X] Email Singpass partner support early: is public display of initials, sex and age band an acceptable purpose? Record the answer on #3. A "no" forces a Byline redesign.
 - [ ] Upload the user journey and request the production app (allow up to 2 weeks). The FAPI 2.0 deadline is 31 Dec 2026.
 - [ ] Hand the staging App ID and keys to #7 as environment values.
 - [ ] Once #7 is built, test logging in on staging in a mobile browser and as an installed PWA, on iPhone and Android. Whether Singpass opens its app from the same phone, or only shows a QR code, is still unconfirmed.
@@ -48,13 +48,13 @@ Last updated: 12 Nov 2026, after tickets #2, #5, #6, #8, #9 and #20.
 
 ## Decisions made while building that you may want to overrule
 
-- [ ] Secondary text uses a darker grey (`#5D6070`) than the old guide's cool grey, which was too faint to pass the contrast check.
-- [ ] Dark mode colours (the ticket only gave light ones): see `docs/style-guide.md` or `/style-guide`.
-- [ ] The favicon and header mark are the lion's head cropped from the logo; the larger app icons are the lion and skyline without the wordmark.
-- [ ] A particle at the start of a name counts as a name ("BIN LADEN TAN" is "BL"). Skipped elsewhere: bin, binte, binti, bte, s/o, d/o, a/l, a/p.
-- [ ] The consent screen is shown at first login (as ticket #6 says), not at first submission (as the spec #1 says). A short reminder shows at every submission.
-- [ ] A Feeling may not contain a link, and line breaks become spaces.
-- [ ] The "+" for writing a Feeling is in the header for now; it moves to the voting screen with #10.
+- [X] Secondary text uses a darker grey (`#5D6070`) than the old guide's cool grey, which was too faint to pass the contrast check.
+- [X] Dark mode colours (the ticket only gave light ones): see `docs/style-guide.md` or `/style-guide`.
+- [X] The favicon and header mark are the lion's head cropped from the logo; the larger app icons are the lion and skyline without the wordmark.
+- [X] A particle at the start of a name counts as a name ("BIN LADEN TAN" is "BL"). Skipped elsewhere: bin, binte, binti, bte, s/o, d/o, a/l, a/p.
+- [X] The consent screen is shown at first login (as ticket #6 says), not at first submission (as the spec #1 says). A short reminder shows at every submission.
+- [X] A Feeling may not contain a link, and line breaks become spaces.
+- [X] The "+" for writing a Feeling is in the header for now; it moves to the voting screen with #10.
 
 ## Later, whenever you like
 
