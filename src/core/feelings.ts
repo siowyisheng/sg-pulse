@@ -1,11 +1,11 @@
 import { and, asc, count, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import type { Db } from "@/db";
 import { schema } from "@/db";
-import type { Byline } from "./byline";
+import { bylineOf, type Byline } from "./byline";
 import { cycleOf, isCycle, submissionCycleOf, type Cycle } from "./cycle";
 import { FeelingError } from "./errors";
 import { normalisedHashtag, refuseLinks, validPolarity, validText, type Polarity } from "./feeling-rules";
-import type { Clock } from "./ports";
+import type { Clock, Random } from "./ports";
 import { isProfane } from "./profanity";
 
 /** A Feeling of the Day as a Visitor sees it. */
@@ -76,10 +76,42 @@ export interface Submission {
   queued: boolean;
 }
 
+/** One Hashtag in a Polarity's word cloud. */
+export interface CloudWord {
+  hashtag: string;
+  /** How many of the Cycle's Candidates use it. */
+  feelings: number;
+  /** 1 (smallest) to 5 (the most used), by its share of the most used Hashtag. */
+  size: 1 | 2 | 3 | 4 | 5;
+}
+
+/** A Candidate as anyone browsing sees it. Never how many Upvotes it has. */
+export interface Candidate {
+  id: string;
+  text: string;
+  polarity: Polarity;
+  hashtag: string;
+  byline: Byline;
+}
+
+/** How many Candidates the Hashtag screen shows at once. */
+export const CANDIDATES_SHOWN = 10;
+const CLOUD_SIZES = 5;
+
 const POLARITY_WORDS = { good: "Good", bad: "Bad" } as const;
 
-export function createFeelings({ db, clock }: { db: Db; clock: Clock }) {
+export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; random: Random }) {
   const today = () => cycleOf(clock.now());
+
+  /** A jumbled copy, so position says nothing about popularity or age. */
+  function jumbled<T>(items: T[]): T[] {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j]!, copy[i]!];
+    }
+    return copy;
+  }
 
   function stateOf(cycle: Cycle, isWinner: boolean): FeelingState {
     if (isWinner) return "winner";
@@ -221,6 +253,45 @@ export function createFeelings({ db, clock }: { db: Db; clock: Clock }) {
         .groupBy(schema.feelings.hashtag)
         .orderBy(desc(uses), asc(schema.feelings.hashtag));
       return rows.map((row) => row.hashtag);
+    },
+
+    /**
+     * A Polarity's word cloud: the Hashtags of the Cycle's Candidates, most used first, each sized by
+     * how many Feelings use it.
+     */
+    async wordCloud(polarity: Polarity): Promise<CloudWord[]> {
+      if (polarity !== "good" && polarity !== "bad") return [];
+      const uses = count();
+      const rows = await db
+        .select({ hashtag: schema.feelings.hashtag, feelings: uses })
+        .from(schema.feelings)
+        .where(and(eq(schema.feelings.cycle, today()), eq(schema.feelings.polarity, polarity), isNotNull(schema.feelings.submitterId)))
+        .groupBy(schema.feelings.hashtag)
+        .orderBy(desc(uses), asc(schema.feelings.hashtag));
+      const most = rows[0]?.feelings ?? 0;
+      return rows.map((row) => ({ ...row, size: Math.max(1, Math.round((CLOUD_SIZES * row.feelings) / most)) as CloudWord["size"] }));
+    },
+
+    /** Up to 10 of the Cycle's Candidates for a Polarity and Hashtag, jumbled; all of them when there are 10 or fewer. */
+    async candidates(input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> {
+      if (input.polarity !== "good" && input.polarity !== "bad") return [];
+      let hashtag: string;
+      try {
+        hashtag = normalisedHashtag(input.hashtag);
+      } catch {
+        return [];
+      }
+      const now = clock.now();
+      const rows = await db
+        .select({ id: schema.feelings.id, text: schema.feelings.text, polarity: schema.feelings.polarity, hashtag: schema.feelings.hashtag, submitter: schema.users })
+        .from(schema.feelings)
+        .innerJoin(schema.users, eq(schema.users.id, schema.feelings.submitterId))
+        .where(and(eq(schema.feelings.cycle, cycleOf(now)), eq(schema.feelings.polarity, input.polarity), eq(schema.feelings.hashtag, hashtag)))
+        // A steady order to jumble from, so the jumble depends on the dice alone.
+        .orderBy(asc(schema.feelings.createdAt), asc(schema.feelings.id));
+      return jumbled(rows)
+        .slice(0, CANDIDATES_SHOWN)
+        .map(({ submitter, ...feeling }) => ({ ...feeling, byline: bylineOf(submitter, now) }));
     },
   };
 }

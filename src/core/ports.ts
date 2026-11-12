@@ -4,6 +4,9 @@ export interface Clock {
   now(): Date;
 }
 
+/** A roll of the dice: a number from 0 up to, but not including, 1. Tests bring their own, so a jumble can be repeated. */
+export type Random = () => number;
+
 /** What Singpass (Myinfo) tells Yah Lah about a person, with their consent. Never the NRIC or FIN. */
 export interface SingpassPerson {
   /** Singpass's identifier for the person (a UUID). */
@@ -19,7 +22,8 @@ export interface SingpassPerson {
 /**
  * Singpass login with Myinfo. A login is a round trip: send the browser to `authorize`'s URL, and
  * Singpass sends it back to our callback with a code that `exchange` turns into the person's details.
- * Any error from `exchange` means Singpass didn't vouch for anyone.
+ * Any error from `exchange` means Singpass didn't vouch for anyone; a NoMyinfoProfileError says the
+ * person is real but Singpass holds no Myinfo details for them.
  */
 export interface Singpass {
   /**
@@ -46,4 +50,9 @@ export interface WebPushPayload {
 /** Sends a web push to one browser. Any error it throws is a fault; the caller never lets it undo anything. */
 export interface WebPush {
   send(subscription: WebPushSubscription, payload: WebPushPayload): Promise<void>;
+}
+
+/** Singpass knows the person, but has no Myinfo profile to share: trying again won't help them. */
+export class NoMyinfoProfileError extends Error {
+  override name = "NoMyinfoProfileError";
 }

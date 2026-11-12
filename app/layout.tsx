@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
@@ -49,10 +48,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             )}
             {me && (
               <>
-                {/* Moves to the voting screen once that exists. */}
-                <a className="header-link" href="/submit" aria-label="Write a Feeling">
-                  <Plus aria-hidden="true" size={24} />
-                </a>
                 <a className="header-link" href="/me" aria-label="My Feelings">
                   <BylineChip>{bylineText(me.byline)}</BylineChip>
                 </a>

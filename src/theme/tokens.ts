@@ -102,6 +102,8 @@ export const sizes = {
   header: "56px",
   /** The widest a column of reading gets. */
   column: "560px",
+  /** The round "+" on the voting screen. */
+  writeButton: "56px",
   /** The ad slot: a standard mobile banner. */
   adWidth: "320px",
   adHeight: "50px",
@@ -152,6 +154,9 @@ export const pairs: ColorPair[] = [
   { use: "Under review chip and the demo banner", text: "ink", background: "warningTint" },
   { use: "Error outline and icon on a card", text: "error", background: "surface", large: true },
   { use: "Error outline and icon on the page", text: "error", background: "background", large: true },
+  { use: "Good mood on the voting screen", text: "goodText", background: "goodTint" },
+  { use: "Bad mood on the voting screen", text: "badText", background: "badTint" },
+  { use: "Write a Feeling button", text: "onSolid", background: "primary" },
   { use: "Form fields", text: "ink", background: "surface" },
   { use: "Form field border", text: "line", background: "surface", large: true },
 ];

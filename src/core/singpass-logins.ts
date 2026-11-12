@@ -5,7 +5,7 @@ import { schema } from "@/db";
 import type { PendingPerson } from "@/db/schema";
 import { ageInYears, initialsOf, MINIMUM_AGE, sexOf } from "./byline";
 import { singpassError } from "./errors";
-import type { Clock, Singpass, SingpassPerson } from "./ports";
+import { NoMyinfoProfileError, type Clock, type Singpass, type SingpassPerson } from "./ports";
 import { hashToken } from "./sessions";
 
 /** How long someone has to come back from Singpass, and then to agree on the consent screen. */
@@ -83,6 +83,7 @@ export function createSingpassLogins({ db, clock, singpass }: { db: Db; clock: C
         });
         if (!/^\d{4}-\d{2}-\d{2}$/.test(vouched.dateOfBirth)) throw new Error("Singpass gave no usable date of birth");
       } catch (error) {
+        if (error instanceof NoMyinfoProfileError) throw singpassError("NO_MYINFO");
         console.error("Singpass exchange failed", error);
         throw singpassError("SINGPASS_FAILED");
       }

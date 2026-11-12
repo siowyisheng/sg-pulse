@@ -4,14 +4,14 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
-import { createFeelings, type FeelingInput, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
+import { createFeelings, type Candidate, type CloudWord, type FeelingInput, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
-import type { Clock, Singpass, WebPush } from "./ports";
+import type { Clock, Random, Singpass, WebPush } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
 export type { Session };
-export type { FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+export type { Candidate, CloudWord, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -30,6 +30,8 @@ export interface AppDeps {
   singpass: Singpass;
   /** Pushes to browsers whose User opted in. Nothing is sent yet. */
   webPush: WebPush;
+  /** The dice that jumble Candidates. Math.random unless given. */
+  random?: Random;
 }
 
 /** A signed-in User, and what they may see or do. */
@@ -56,10 +58,10 @@ export type SingpassOutcome = { outcome: "signed-in"; session: Session } | { out
 export type App = ReturnType<typeof createApp>;
 
 /** The application: everything Yah Lah does, behind one interface. */
-export function createApp({ db, clock, singpass }: AppDeps) {
+export function createApp({ db, clock, singpass, random = Math.random }: AppDeps) {
   const sessions = createSessions({ db, clock });
   const logins = createSingpassLogins({ db, clock, singpass });
-  const feelings = createFeelings({ db, clock });
+  const feelings = createFeelings({ db, clock, random });
 
   const admin: Admin = {
     scheduleSeedFeeling: (input) => feelings.scheduleSeed(input),
@@ -131,6 +133,12 @@ export function createApp({ db, clock, singpass }: AppDeps) {
 
     /** The Feelings of the Day for the Cycle it is right now in Singapore. Open to any Visitor. */
     feelingsOfTheDay: (): Promise<FeelingsOfTheDay> => feelings.ofTheDay(),
+
+    /** A Polarity's word cloud for the Cycle under way. Open to any Visitor. */
+    wordCloud: (polarity: Polarity): Promise<CloudWord[]> => feelings.wordCloud(polarity),
+
+    /** Up to 10 jumbled Candidates for a Polarity and Hashtag, with Bylines and no counts. Open to any Visitor. */
+    candidates: (input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> => feelings.candidates(input),
 
     /** The Hashtags of the Cycle under way, most used first, for a new Feeling to join. Open to any Visitor. */
     hashtagsInUse: (): Promise<string[]> => feelings.hashtagsInUse(),

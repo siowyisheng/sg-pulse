@@ -116,6 +116,11 @@ describe("through the app", () => {
     expect(await everythingStored()).not.toContain('\\"d\\"');
   });
 
+  it("tells someone with no Myinfo profile so, as trying again won't help", async () => {
+    const { finish } = await appWith({ noMyinfoProfile: true });
+    await expect(finish(myinfo())).rejects.toMatchObject({ code: "NO_MYINFO", message: "Singpass has no Myinfo details for you, so we can't set up your Byline." });
+  });
+
   it("refuses an under-13 from Myinfo's date of birth", async () => {
     const { finish } = await appWith();
     await expect(finish(myinfo({ dob: { value: "2014-01-01" } }))).rejects.toMatchObject({ code: "TOO_YOUNG" });

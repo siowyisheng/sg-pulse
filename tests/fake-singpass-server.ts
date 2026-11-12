@@ -26,6 +26,8 @@ export interface Tampering {
   personInfo?: Record<string, unknown>;
   /** Ask for a DPoP nonce first, as RFC 9449 allows. */
   requireDpopNonce?: boolean;
+  /** The person has a Singpass account but no Myinfo profile. */
+  noMyinfoProfile?: boolean;
   /** Sign with a key Singpass doesn't publish. */
   signWithUnknownKey?: boolean;
 }
@@ -160,6 +162,7 @@ export async function createFakeSingpassServer(tampering: Tampering = {}) {
       const jkt = await checkDpop(headers.get("DPoP"), "GET", url, accessToken);
       if (jkt === "nonce") return nonceNeeded();
       if (!grant || !jkt || grant.jkt !== jkt) return error(401, "invalid_token");
+      if (tampering.noMyinfoProfile) return json(400, { error: "invalid_request", error_description: "Myinfo profile has yet to be provisioned for the user" });
       const body = await sealed({
         iss: ISSUER,
         aud: CLIENT_ID,

@@ -11,7 +11,7 @@ import {
   type JWK,
   type JWTVerifyGetKey,
 } from "jose";
-import type { Singpass, SingpassPerson } from "@/core/ports";
+import { NoMyinfoProfileError, type Singpass, type SingpassPerson } from "@/core/ports";
 
 /**
  * Singpass login with Myinfo over its FAPI 2.0 API: a pushed authorisation request with
@@ -236,7 +236,12 @@ export function createSingpassFapi(config: SingpassFapiConfig): Singpass {
         { headers: { Authorization: `DPoP ${tokens.access_token}` } },
         sha256(tokens.access_token),
       );
-      if (!userinfoResponse.ok) throw await failure("userinfo request", userinfoResponse);
+      if (!userinfoResponse.ok) {
+        const problem = await failure("userinfo request", userinfoResponse);
+        // What Singpass says for an account with no Myinfo data behind it (seen on staging test accounts).
+        if (/Myinfo profile has yet to be provisioned/i.test(problem.message)) throw new NoMyinfoProfileError(problem.message);
+        throw problem;
+      }
       const userinfo = await openToken((await userinfoResponse.text()).trim(), meta.issuer);
       if (userinfo.sub !== subject) throw new SingpassProtocolError("The userinfo is for someone other than the ID token");
       return personFrom(subject, userinfo.person_info);

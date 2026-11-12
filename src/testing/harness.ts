@@ -5,7 +5,7 @@ import { codeFor, createFakeSingpass } from "@/adapters/fake-singpass";
 import { createApp } from "@/core/app";
 import type { Singpass, SingpassPerson } from "@/core/ports";
 import { schema } from "@/db";
-import { FakeClock, FakeWebPush } from "./fakes";
+import { FakeClock, FakeRandom, FakeWebPush } from "./fakes";
 
 export interface TestAppOptions {
   /** Start time of the controllable clock. */
@@ -53,7 +53,8 @@ export async function createTestApp(options: TestAppOptions = {}) {
 
   const clock = new FakeClock(options.now ?? "2026-01-01T00:00:00+08:00");
   const webPush = new FakeWebPush();
-  const app = createApp({ db, clock, webPush, singpass: options.singpass ?? createFakeSingpass() });
+  const random = new FakeRandom();
+  const app = createApp({ db, clock, webPush, random: random.next, singpass: options.singpass ?? createFakeSingpass() });
 
   /** A round trip to the fake Singpass as this person, in one browser. */
   async function logIn(person: SingpassPerson) {
@@ -86,5 +87,5 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return JSON.stringify(rows);
   }
 
-  return { app, clock, webPush, logIn, signUp, signUpAdmin, everythingStored };
+  return { app, clock, webPush, random, logIn, signUp, signUpAdmin, everythingStored };
 }

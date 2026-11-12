@@ -40,3 +40,21 @@ export class FakeWebPush implements WebPush {
     this.sent.push({ subscription, payload });
   }
 }
+
+/** Dice that roll the same way every time for the same seed, so a jumble can be repeated in a test. */
+export class FakeRandom {
+  private state = 1;
+
+  seed(seed: number) {
+    this.state = seed;
+  }
+
+  /** Mulberry32. */
+  next = (): number => {
+    this.state = (this.state + 0x6d2b79f5) | 0;
+    let t = this.state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

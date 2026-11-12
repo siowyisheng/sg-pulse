@@ -40,6 +40,7 @@ export class FeelingError extends UserFacingError<FeelingErrorCode> {}
 export const SINGPASS_MESSAGES = {
   SINGPASS_EXPIRED: "Your Singpass login has expired. Please log in again.",
   SINGPASS_FAILED: "Something went wrong with your Singpass login. Please try again.",
+  NO_MYINFO: "Singpass has no Myinfo details for you, so we can't set up your Byline.",
   TOO_YOUNG: "You need to be 13 or older to take part in Yah Lah.",
 } as const;
 

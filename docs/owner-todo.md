@@ -2,7 +2,7 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 13 Nov 2026, after tickets #2, #5, #6, #7, #8, #9 and #20.
+Last updated: 13 Nov 2026, after tickets #2, #5 to #10 and #20.
 
 ## After every push that changes the database
 
@@ -15,7 +15,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5, #6, #7, #8, #9 and #20.
 
 ## Housekeeping on GitHub
 
-- [ ] Close #6 and #20 (built and pushed; still open). Close #7 once a staging login works.
+- [ ] Look at the voting screen, word clouds and Hashtag screen (#10), then close #10. That unblocks #11 (the Yah Lah button).
 
 ## Singpass (tickets #3 and #7)
 
