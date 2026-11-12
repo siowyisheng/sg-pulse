@@ -1,14 +1,4 @@
-/* A plain first pass. The Yah Lah theme, fonts and shared components arrive with the style-guide ticket. */
-:root {
-  --navy: #1d3b66;
-  --good: #00806a;
-  --bad: #6b4e96;
-  --ink: #12131a;
-  --muted: #5d6070;
-  --surface: #f5f6fa;
-  --card: #ffffff;
-  --header-height: 56px;
-}
+/* Every value here comes from the theme tokens (src/theme/tokens.ts); the build fails on a raw colour or font. */
 
 * {
   box-sizing: border-box;
@@ -20,62 +10,287 @@ body {
 }
 
 body {
-  background: var(--surface);
-  color: var(--ink);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 22px;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--type-body-line);
   overflow-wrap: anywhere;
 }
 
-.demo-banner {
+h1,
+h2,
+h3,
+p {
   margin: 0;
-  padding: 4px 16px;
-  background: #fff3cd;
-  font-size: 13px;
-  text-align: center;
 }
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--type-h1-size);
+  font-weight: var(--type-h1-weight);
+  line-height: var(--type-h1-line);
+  letter-spacing: var(--type-h1-tracking);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-h2-size);
+  font-weight: var(--type-h2-weight);
+  line-height: var(--type-h2-line);
+  letter-spacing: var(--type-h2-tracking);
+}
+
+h3 {
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h3-weight);
+  line-height: var(--type-h3-line);
+  letter-spacing: var(--type-h3-tracking);
+}
+
+a {
+  color: var(--color-primary-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary-text);
+  outline-offset: 2px;
+}
+
+.caption {
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+  line-height: var(--type-caption-line);
+  letter-spacing: var(--type-caption-tracking);
+}
+
+.muted {
+  color: var(--color-ink-muted);
+}
+
+/* Header */
 
 .site-header {
   display: flex;
   align-items: center;
-  height: var(--header-height);
-  padding: 0 16px;
-  background: var(--navy);
+  height: var(--size-header);
+  padding: 0 var(--space-md);
+  background: var(--color-primary);
+  color: var(--color-on-solid);
 }
 
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 700;
+  gap: var(--space-sm);
+  min-height: var(--size-touch-target);
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h2-weight);
+  line-height: var(--type-h3-line);
   text-decoration: none;
 }
 
 .wordmark img {
-  border-radius: 8px;
+  border-radius: var(--space-sm);
 }
 
-/* Both Feelings fit the first screen of a phone, sharing the height left under the header. */
+.site-header :focus-visible {
+  outline-color: var(--color-on-solid);
+}
+
+.demo-banner {
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-warning-tint);
+  color: var(--color-ink);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+  line-height: var(--type-caption-line);
+  text-align: center;
+}
+
+/* Buttons: Yah Lah (red), secondary (navy), ghost */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
+  padding: 14px var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-button);
+  font-family: inherit;
+  font-size: var(--type-body-bold-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-body-bold-line);
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.button-yah-lah {
+  background: var(--color-accent);
+  color: var(--color-on-solid);
+  font-weight: var(--type-h2-weight);
+}
+
+.button-yah-lah:hover:not(:disabled),
+.button-yah-lah:active:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: var(--color-on-solid);
+}
+
+.button-secondary {
+  background: var(--color-primary);
+  color: var(--color-on-solid);
+}
+
+.button-secondary:hover:not(:disabled),
+.button-secondary:active:not(:disabled) {
+  background: var(--color-primary-hover);
+  color: var(--color-on-solid);
+}
+
+.button-ghost {
+  padding: 12.5px var(--space-lg);
+  border: 1.5px solid var(--color-line);
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.button-ghost:hover:not(:disabled),
+.button-ghost:active:not(:disabled) {
+  background: var(--color-neutral-tint);
+  color: var(--color-ink);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Badges and chips */
+
+.badge,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.badge {
+  padding: var(--space-xs) 10px;
+  font-size: var(--type-badge-size);
+  font-weight: var(--type-badge-weight);
+  line-height: var(--type-badge-line);
+  letter-spacing: var(--type-badge-tracking);
+  text-transform: uppercase;
+}
+
+.badge-good {
+  border: 1px solid var(--color-good-text);
+  background: var(--color-good-tint);
+  color: var(--color-good-text);
+}
+
+.badge-bad {
+  border: 1px solid var(--color-bad-text);
+  background: var(--color-bad-tint);
+  color: var(--color-bad-text);
+}
+
+.chip {
+  padding: var(--space-xs) 10px;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+  letter-spacing: var(--type-caption-tracking);
+}
+
+.chip-byline {
+  background: var(--color-primary-tint);
+  color: var(--color-primary-text);
+}
+
+.chip-neutral {
+  background: var(--color-neutral-tint);
+  color: var(--color-ink);
+}
+
+.chip-warning {
+  background: var(--color-warning-tint);
+  color: var(--color-ink);
+}
+
+/* Card and modal */
+
+.card {
+  padding: var(--space-md);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+}
+
+.modal {
+  width: min(100% - var(--space-xl), var(--size-column));
+  padding: var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-modal);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-modal);
+}
+
+.modal::backdrop {
+  background: var(--shadow-scrim);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+/* The first screen: both Feelings of the Day fit a phone, sharing the height left under the header. */
+
 .first-screen {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 560px;
-  min-height: calc(100svh - var(--header-height));
+  gap: var(--space-md);
+  max-width: var(--size-column);
+  min-height: calc(100svh - var(--size-header));
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--space-md);
 }
 
 .today {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
+  color: var(--color-ink-muted);
+  font-family: inherit;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+  letter-spacing: var(--type-caption-tracking);
 }
 
 .feeling {
@@ -83,72 +298,84 @@ body {
   flex: 1;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--space-sm);
   border-left: 6px solid;
-  border-radius: 16px;
-  background: var(--card);
-  box-shadow: 0 4px 16px rgb(29 59 102 / 8%);
 }
 
-.feeling.good {
-  border-color: var(--good);
+.feeling-good {
+  border-left-color: var(--color-good-fill);
 }
 
-.feeling.bad {
-  border-color: var(--bad);
+.feeling-bad {
+  border-left-color: var(--color-bad-fill);
 }
 
-.polarity {
+.feeling-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.good .polarity,
-.good .hashtag {
-  color: var(--good);
-}
-
-.bad .polarity,
-.bad .hashtag {
-  color: var(--bad);
+  gap: var(--space-sm);
+  color: var(--color-ink-muted);
+  font-family: inherit;
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-body-bold-weight);
+  line-height: var(--type-caption-line);
+  letter-spacing: var(--type-caption-tracking);
 }
 
 .feeling-text {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 32px;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: var(--type-h2-size);
+  font-weight: var(--type-h2-weight);
+  line-height: var(--type-h2-line);
+  letter-spacing: var(--type-h2-tracking);
 }
 
 .feeling-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin: 0;
+  gap: var(--space-sm);
 }
 
 .hashtag {
-  font-weight: 600;
+  font-weight: var(--type-body-bold-weight);
 }
 
-.chip {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgb(29 59 102 / 10%);
-  color: var(--navy);
-  font-size: 13px;
-  font-weight: 600;
+.feeling-good .hashtag {
+  color: var(--color-good-text);
 }
 
-.feeling-empty {
-  margin: 0;
-  color: var(--muted);
+.feeling-bad .hashtag {
+  color: var(--color-bad-text);
+}
+
+/* The style guide's own page */
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: var(--size-column);
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.gallery-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.swatch {
+  display: inline-block;
+  width: var(--space-xl);
+  height: var(--space-xl);
+  border: 1px solid var(--color-line);
+  border-radius: var(--space-sm);
+}
+
+.swatch {
+  background: var(--swatch);
 }

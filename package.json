@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "demo": "node scripts/demo.mjs",
-    "build": "next build",
+    "check:style": "tsx scripts/check-style.ts",
+    "build": "npm run check:style && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --exclude \"**/*.slow.test.ts\"",

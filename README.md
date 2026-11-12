@@ -17,7 +17,10 @@ Demo mode needs no database or `.env.local`: it runs on an in-memory Postgres wi
 npm run typecheck
 npm test            # fast suite
 npm run test:slow   # edge cases
+npm run check:style # no raw colours or fonts, contrast minimums (also runs before every build)
 ```
+
+The look follows `docs/style-guide.md`; `/style-guide` shows the shared components as they render.
 
 ## Deploy (Vercel and Neon, Singapore)
 
