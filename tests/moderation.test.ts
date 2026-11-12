@@ -30,3 +30,28 @@ describe("a User Reports a Candidate", () => {
     expect((await admin.approvalChoices()).good.choices[0]).toMatchObject({ text: "Perfectly innocent", yahLahs: 1 });
   });
 });
+
+describe("an Admin corrects and takes down a Feeling of the Day", () => {
+  it("shows a correction notice on it, then takes it down so the next most-upvoted takes its place", async () => {
+    const { app, signUp, signUpAdmin, clock } = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    const first = await signUp(person(1));
+    const second = await signUp(person(2));
+    await first.me.submitFeeling({ text: "Winner", polarity: "good", hashtag: "kopi" });
+    await second.me.submitFeeling({ text: "Runner-up", polarity: "good", hashtag: "kopi" });
+    const [a, b] = await app.candidates({ polarity: "good", hashtag: "kopi" });
+    const [winner, runnerUp] = a!.text === "Winner" ? [a!, b!] : [b!, a!];
+    await (await signUp(person(3))).me.upvote(winner.id);
+    await (await signUp(person(4))).me.upvote(winner.id);
+    await (await signUp(person(5))).me.upvote(runnerUp.id);
+    const admin = (await signUpAdmin(ADMIN)).me.asAdmin();
+    await admin.approve(winner.id);
+    clock.set("2026-11-13T10:00:00+08:00");
+
+    await admin.setCorrectionNotice(winner.id, "The date was wrong.");
+    expect((await app.feelingsOfTheDay()).good).toMatchObject({ text: "Winner", correctionNotice: "The date was wrong." });
+
+    await admin.takeDown(winner.id);
+    expect((await app.feelingsOfTheDay()).good).toMatchObject({ text: "Runner-up", yahLahs: 1 });
+    expect((await first.me.myFeelings())[0]?.state).toBe("removed");
+  });
+});

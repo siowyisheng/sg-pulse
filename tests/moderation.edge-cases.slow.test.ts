@@ -328,3 +328,17 @@ describe("the audit log of a Take-down", () => {
     expect((await world.admin.auditLog())[0]).toMatchObject({ action: "take-down", detail: "The Carry-over now shows" });
   });
 });
+
+describe("a Take-down that fails part-way", () => {
+  it("is finished by trying again, and then the audit log has it", async () => {
+    const world = await worldWith({ Winner: 2, "Runner-up": 1 });
+    await world.admin.approve(world.ids.Winner!);
+    world.clock.set("2026-11-13T10:00:00+08:00");
+    const letThrough = await world.refuseWritesTo("audit_log");
+    await expect(world.admin.takeDown(world.ids.Winner!)).rejects.toThrow();
+    await letThrough();
+    await world.admin.takeDown(world.ids.Winner!);
+    expect((await world.app.feelingsOfTheDay()).good).toMatchObject({ text: "Runner-up" });
+    expect((await world.admin.auditLog()).filter((entry) => entry.action === "take-down")).toHaveLength(1);
+  });
+});
