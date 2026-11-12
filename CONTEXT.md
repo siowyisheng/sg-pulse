@@ -90,6 +90,9 @@ _Avoid_: Flag, complaint
 An Admin removing a Candidate or a Feeling of the Day, so the next most-upvoted Feeling takes its place. A User may also ask for a published winner to be removed.
 _Avoid_: Delete, ban
 
+**Removal request**:
+A User's ask that a Feeling of theirs that has been a Feeling of the Day be removed, archive entry included. The Admin honours it within 24 hours, by a Take-down. Deleting an account does not make one; a User can ask for it in the same go.
+
 **Timeout**:
 A one-week default restriction on a User's ability to Report, set by an Admin after they Report an innocent Feeling.
 _Avoid_: Ban, suspension

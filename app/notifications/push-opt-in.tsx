@@ -20,7 +20,7 @@ const toBase64 = (buffer: ArrayBuffer | null) => (buffer ? btoa(String.fromCharC
  * Offers the one push a day. On an iPhone a website can only push once it has been added to the
  * Home Screen, so that is what the person is told there.
  */
-export function PushOptIn({ publicKey, then }: { publicKey: string; then?: string }) {
+export function PushOptIn({ publicKey }: { publicKey: string }) {
   const [situation, setSituation] = useState<Situation>("checking");
   const [problem, setProblem] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -77,7 +77,7 @@ export function PushOptIn({ publicKey, then }: { publicKey: string; then?: strin
           <Bell aria-hidden="true" size={18} /> Turn on the daily notification
         </Button>
       )}
-      <a href={then ?? "/"}>{situation === "on" ? "Carry on" : "Not now"}</a>
+      <a href="/">{situation === "on" ? "Carry on" : "Not now"}</a>
     </div>
   );
 }

@@ -105,6 +105,9 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
   const moderation = createModeration({ db, clock });
   const privacy = createPrivacy({ db, clock });
 
+  /** Forgets a browser the push service says is gone. */
+  const forgetSubscription = (endpoint: string) => db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, endpoint));
+
   /** The Admin area, with everything done there recorded against the Admin who did it. */
   const adminFor = (adminId: string): Admin => ({
     async scheduleSeedFeeling(input) {
@@ -278,7 +281,7 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
             await webPush.send(subscription, { title: "Approve tomorrow's Feelings", body, link: "/admin" });
             sent++;
           } catch (error) {
-            if (error instanceof PushSubscriptionGoneError) await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));
+            if (error instanceof PushSubscriptionGoneError) await forgetSubscription(subscription.endpoint);
             else console.error("The Approval reminder couldn't be pushed", error);
           }
         }
@@ -303,12 +306,11 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
           .returning({ endpoint: schema.pushSubscriptions.endpoint, p256dh: schema.pushSubscriptions.p256dh, auth: schema.pushSubscriptions.auth });
         let sent = 0;
         for (const subscription of claimed) {
-          const forget = () => db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));
           try {
             await webPush.send(subscription, { title: "Yah Lah", body: `SG's FOTD are about ${tags.join(" and ")}`, link: "/" });
             sent++;
           } catch (error) {
-            if (error instanceof PushSubscriptionGoneError) await forget();
+            if (error instanceof PushSubscriptionGoneError) await forgetSubscription(subscription.endpoint);
             else {
               console.error("The daily push couldn't be sent", error);
               await db.update(schema.pushSubscriptions).set({ lastPushedCycle: null }).where(eq(schema.pushSubscriptions.endpoint, subscription.endpoint));

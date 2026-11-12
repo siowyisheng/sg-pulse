@@ -109,7 +109,7 @@ export function createPrivacy({ db, clock }: { db: Db; clock: Clock }) {
       await db.execute(sql`
         WITH published AS (
           SELECT feeling.id FROM ${schema.feelings} AS feeling
-          WHERE feeling.submitter_id = ${userId}::uuid
+          WHERE feeling.submitter_id = ${userId}::uuid AND feeling.removed_at IS NULL
             AND EXISTS (SELECT 1 FROM ${schema.feelingsOfTheDay} AS day WHERE day.feeling_id = feeling.id AND day.cycle <= ${today}::date)
         ), kept AS (
           UPDATE ${schema.feelings} SET submitter_id = NULL, byline_snapshot = ${byline}::jsonb

@@ -89,6 +89,13 @@ describe("deleting an account", () => {
     expect((await w.app.feelingsOfTheDay()).good).toBeNull();
   });
 
+  it("takes with it a Feeling an Admin has already removed, since nothing is left to keep", async () => {
+    const w = await world();
+    await w.admin.takeDown(w.winnerId);
+    await w.writer.me.deleteAccount();
+    expect(await w.everythingStored()).not.toContain("Winner");
+  });
+
   it("does nothing the second time", async () => {
     const w = await world();
     await w.writer.me.deleteAccount();

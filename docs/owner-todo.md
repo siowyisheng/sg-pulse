@@ -123,6 +123,7 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 
 - [ ] A Take-down putting the next most-upvoted Feeling in place without your Approval is confirmed by you (13 Nov), so ADR 0002 should say so. Ask an agent to amend it.
 - [ ] Deleting an account removes that person's Upvotes, so the final count shown on a Feeling of the Day they voted for goes down by one. The winners themselves stay.
+- [ ] The log kept for 12 months is the audit log. A Report's own row (who Reported what) is not trimmed yet, and a deleted account's Reports stay without their reporter. The submission line is written just after the Feeling is saved, so a crash in between could leave a Feeling unlogged.
 - [ ] A deleted account leaves a record in the log with its internal ID and no name, kept 12 months. The log is trimmed by the morning job; an Admin screen to read it is not built.
 - [ ] The daily notification leaves out nothing yet. When Election Mode (#16) is built it must hide held Hashtags from the push as well.
 
