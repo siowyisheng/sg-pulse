@@ -2,7 +2,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { codeFor, createFakeSingpass } from "@/adapters/fake-singpass";
-import { createApp, type App } from "@/core/app";
+import { createApp, type App, type Me } from "@/core/app";
 import { cycleOf } from "@/core/cycle";
 import { schema } from "@/db";
 
@@ -62,12 +62,20 @@ async function build(): Promise<App> {
     await app.operator.scheduleSeedFeeling({ cycle, polarity: "good", text: sample.good[0], hashtag: sample.good[1] });
     await app.operator.scheduleSeedFeeling({ cycle, polarity: "bad", text: sample.bad[0], hashtag: sample.bad[1] });
   }
+  const writers: Me[] = [];
   for (const [index, [name, dateOfBirth, sex, polarity, hashtag, text]] of CANDIDATES.entries()) {
     const { state } = await app.startSingpass();
     const login = await app.finishSingpass({ state, browserState: state, code: codeFor({ subject: `demo-sample-${index}`, name, dateOfBirth, sex }) });
     if (login.outcome !== "consent-needed") continue;
     const me = await app.authenticate((await app.confirmConsent(login.proof)).token);
     await me?.submitFeeling({ text, polarity, hashtag });
+    if (me) writers.push(me);
+  }
+  // Some Upvotes, unevenly spread, so the Admin's top three and the mix have something to rank.
+  for (const [index, voter] of writers.entries()) {
+    const liked = await app.candidates({ polarity: index % 3 === 0 ? "bad" : "good", hashtag: index % 2 === 0 ? "mrt" : "weather" });
+    const choice = liked.find((candidate) => candidate.text !== CANDIDATES[index]![5]);
+    if (choice) await voter.upvote(choice.id).catch(() => undefined);
   }
   settingUp = false;
   return app;

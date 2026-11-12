@@ -29,6 +29,13 @@
       "when": 1794510630951,
       "tag": "0003_upvotes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794511218606,
+      "tag": "0004_approval_rising_and_push",
+      "breakpoints": true
     }
   ]
 }

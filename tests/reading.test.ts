@@ -11,8 +11,8 @@ describe("a Visitor reads the Feelings of the Day", () => {
 
     expect(today).toEqual({
       cycle: "2026-11-12",
-      good: { polarity: "good", text: "Kopi at the void deck with the uncles", hashtag: "kopi", fromTheTeam: true, byline: null },
-      bad: { polarity: "bad", text: "Train delay again this morning", hashtag: "mrt", fromTheTeam: true, byline: null },
+      good: { polarity: "good", text: "Kopi at the void deck with the uncles", hashtag: "kopi", fromTheTeam: true, byline: null, yahLahs: null, carriedOver: false },
+      bad: { polarity: "bad", text: "Train delay again this morning", hashtag: "mrt", fromTheTeam: true, byline: null, yahLahs: null, carriedOver: false },
     });
   });
 });

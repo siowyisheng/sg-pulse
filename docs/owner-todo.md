@@ -2,11 +2,11 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 13 Nov 2026, after tickets #2, #5 to #11 and #20.
+Last updated: 13 Nov 2026, after tickets #2, #5 to #13 and #20.
 
 ## After every push that changes the database
 
-- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0003_upvotes.sql` (ticket #11): until it is run, tapping Yah Lah fails, and so do the Hashtag screen and the My Feelings page for anyone logged in.
+- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0004_approval_rising_and_push.sql` (tickets #12 and #13): until it is run, the front page, the Hashtag screen and Yah Lah all fail on the live site.
 
 ## Every day, until the Admin area can be used on the live site
 
@@ -15,7 +15,13 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #11 and #20.
 
 ## Housekeeping on GitHub
 
-- [ ] Try the Yah Lah button (#11), then close #11. That unblocks #12 (Rising and New Candidates) and #13 (Approval, go-live and Carry-over).
+- [ ] Try the Approval section at the top of `/admin` and the new mix of Candidates, then close #12 and #13. Closing #13 unblocks #14 (Report, Take-down and Timeout), #15 (correction notices), #16 (Election Mode) and #17 (archive and share cards).
+
+## Every evening, from now on
+
+- [ ] Before midnight, open `/admin` and approve one Good and one Bad Feeling from the top three. They go live at 00:00. If you approve nothing for a Polarity, today's Feeling stays up marked "Still feeling it".
+- [ ] Set `CRON_SECRET` in Vercel to a long random string (for example the output of `openssl rand -hex 32`) and redeploy. Vercel then calls the reminder job once a day at about 21:00 SGT. Without it the job answers 401 and does nothing.
+  - The reminder is a push to your phone, and pushes only start working with #19 (installable PWA and the daily push). Until then nothing reminds you: set your own alarm.
 
 ## Singpass (tickets #3 and #7)
 
@@ -73,6 +79,13 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] Someone whose Singpass account has no Myinfo profile is told "Singpass has no Myinfo details for you, so we can't set up your Byline."
 - [ ] A Visitor who taps Yah Lah and logs in lands on the front page afterwards, not back on the Candidate they tapped.
 - [ ] After saying Yah Lah the Candidates stay in the order they were in, with a quiet "Your Yah Lah" mark on the one chosen. The My Feelings page also shows today's Yah Lah, with a "Take it back" button.
+- [ ] The Admin sees how many Yah Lahs each of the top three has so far. Nobody else sees a count until a Feeling has won.
+- [ ] An Approval can be changed or withdrawn until 00:00. One made at 00:01 is too late: yesterday's Candidates can no longer be approved and the Carry-over stands.
+- [ ] Approving a Candidate replaces a Seed Feeling scheduled for the same day.
+- [ ] A Carry-over keeps going for as many days as nothing is approved, and shows the count the Feeling won with.
+- [ ] The top three include Candidates with no Yah Lahs when fewer than three have any (earliest written first), so there is always something to approve.
+- [ ] The mix of 10: the 5 with the most Yah Lahs, then 3 Rising (at least 2 Yah Lahs, and at least half of them still "fresh", where freshness halves every 3 hours), then 2 New (0 or 1 Yah Lahs, picked at random so they take turns). A group that is short gives its places to New ones, then to the next most upvoted.
+- [ ] Moving a Yah Lah away and back to the same Candidate counts as a fresh Yah Lah for "Rising" each time. One person could nudge a Candidate into the Rising places that way; it does not change any count.
 
 ## Later, whenever you like
 

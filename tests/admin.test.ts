@@ -14,6 +14,6 @@ describe("an Admin enters Seed Feelings", () => {
     clock.set("2026-11-12T23:59:00+08:00");
     expect((await app.feelingsOfTheDay()).good).toBeNull();
     clock.set("2026-11-13T00:00:00+08:00");
-    expect((await app.feelingsOfTheDay()).good).toEqual({ polarity: "good", text: "Kopi with the neighbours", hashtag: "kopi", fromTheTeam: true, byline: null });
+    expect((await app.feelingsOfTheDay()).good).toEqual({ polarity: "good", text: "Kopi with the neighbours", hashtag: "kopi", fromTheTeam: true, byline: null, yahLahs: null, carriedOver: false });
   });
 });

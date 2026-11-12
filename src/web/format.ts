@@ -4,3 +4,6 @@ import type { Cycle } from "@/core/cycle";
 export function formatCycle(cycle: Cycle): string {
   return new Intl.DateTimeFormat("en-SG", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${cycle}T00:00:00Z`));
 }
+
+/** A count of Upvotes as it reads: "1 Yah Lah", "12 Yah Lahs". */
+export const yahLahs = (count: number): string => `${count} Yah Lah${count === 1 ? "" : "s"}`;

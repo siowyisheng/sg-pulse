@@ -1,4 +1,4 @@
-import { boolean, date, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, date, doublePrecision, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const polarity = pgEnum("polarity", ["good", "bad"]);
 
@@ -15,6 +15,12 @@ export const feelings = pgTable(
     submitterId: uuid("submitter_id").references((): AnyPgColumn => users.id),
     /** The Cycle a submitted Feeling competes in: its Submitter's one Feeling for that Cycle. */
     cycle: date("cycle", { mode: "string" }),
+    /**
+     * How fresh its Upvotes are: each Upvote it receives adds one, and the sum halves every few
+     * hours. Touched only when an Upvote arrives; `risingAt` says how old the figure is.
+     */
+    risingScore: doublePrecision("rising_score").notNull().default(0),
+    risingAt: timestamp("rising_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => [uniqueIndex("feelings_one_per_submitter_per_cycle").on(table.submitterId, table.cycle)],
@@ -104,3 +110,14 @@ export const upvotes = pgTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.cycle] }), index("upvotes_by_feeling").on(table.feelingId)],
 );
+
+/** A browser a User has allowed to receive pushes. */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  endpoint: text("endpoint").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});

@@ -42,6 +42,10 @@ _Avoid_: Entry, contender
 A Candidate whose recent Upvote activity is high relative to its total, so it is surfaced beside the top Candidates.
 _Avoid_: Trending, hot
 
+**New Candidate**:
+A Candidate with hardly any Upvotes yet, given a couple of the places beside the top and Rising Candidates so that fresh Feelings are seen.
+_Avoid_: Fresh, recent
+
 **Cycle**:
 One Singapore calendar day (00:00 to 23:59 SGT) of Upvoting for its Candidates, ending with the next Feelings of the Day being named.
 _Avoid_: Round, day (when meaning the voting period)

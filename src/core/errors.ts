@@ -53,3 +53,5 @@ export const singpassError = (code: SingpassErrorCode) => new SingpassError(code
 export class AdminError extends UserFacingError<"NOT_ADMIN"> {}
 
 export class UpvoteError extends UserFacingError<"NOT_A_CANDIDATE" | "OWN_FEELING"> {}
+
+export class ApprovalError extends UserFacingError<"NOT_A_CHOICE"> {}

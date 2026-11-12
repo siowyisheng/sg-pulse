@@ -1,12 +1,13 @@
 import { Frown, Plus, Smile } from "lucide-react";
 import type { FeelingOfTheDay } from "@/core/app";
+import { bylineText } from "@/core/byline";
 import type { Polarity } from "@/core/feeling-rules";
 import { getApp } from "@/composition";
 import { AdSlot } from "@/ui/ad-slot";
-import { FromTheTeamChip, PolarityBadge } from "@/ui/badges";
+import { BylineChip, FromTheTeamChip, PolarityBadge, StillFeelingItChip } from "@/ui/badges";
 import { Card } from "@/ui/card";
 import { commercialSettings } from "@/web/commercial";
-import { formatCycle } from "@/web/format";
+import { formatCycle, yahLahs } from "@/web/format";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
 
@@ -25,7 +26,10 @@ function Feeling({ polarity, feeling }: { polarity: Polarity; feeling: FeelingOf
           <p className="feeling-meta">
             <span className={`hashtag hashtag-${polarity}`}>#{feeling.hashtag}</span>
             {feeling.fromTheTeam && <FromTheTeamChip />}
+            {feeling.byline && <BylineChip>{bylineText(feeling.byline)}</BylineChip>}
+            {feeling.carriedOver && <StillFeelingItChip />}
           </p>
+          {feeling.yahLahs !== null && <p className="caption muted">{yahLahs(feeling.yahLahs)}</p>}
         </>
       ) : (
         <p className="muted">Nothing here today.</p>

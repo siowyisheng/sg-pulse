@@ -53,12 +53,12 @@ export function StillFeelingItChip() {
   );
 }
 
-/** On a Submitter's own Feeling while a Report on it is open. */
-export function UnderReviewChip() {
+/** Something waiting on the Admin: by default, a Submitter's own Feeling while a Report on it is open. */
+export function UnderReviewChip({ label = "Under review" }: { label?: string }) {
   return (
     <span className="chip chip-warning">
       <Hourglass aria-hidden="true" size={14} />
-      Under review
+      {label}
     </span>
   );
 }

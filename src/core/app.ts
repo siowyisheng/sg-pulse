@@ -4,14 +4,14 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
-import { createFeelings, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
+import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
-import type { Clock, Random, Singpass, WebPush } from "./ports";
+import type { Clock, Random, Singpass, WebPush, WebPushSubscription } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
 export type { Session };
-export type { Candidate, CloudWord, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -21,6 +21,12 @@ export interface Admin {
   scheduledSeedFeelings(): Promise<ScheduledSeedFeeling[]>;
   /** Takes back a Seed Feeling whose Cycle has not started. */
   unscheduleSeedFeeling(input: { cycle: string; polarity: Polarity }): Promise<void>;
+  /** Today's top three Candidates for each Polarity, with their Upvotes so far, and what is approved for tomorrow. */
+  approvalChoices(): Promise<ApprovalChoices>;
+  /** Approval: makes one of a Polarity's top three tomorrow's Feeling of the Day, live at 00:00 SGT. Can be changed until then. */
+  approve(feelingId: string): Promise<void>;
+  /** Takes back tomorrow's Approval for a Polarity. */
+  withdrawApproval(polarity: Polarity): Promise<void>;
 }
 
 export interface AppDeps {
@@ -28,7 +34,7 @@ export interface AppDeps {
   clock: Clock;
   /** Singpass login with Myinfo. */
   singpass: Singpass;
-  /** Pushes to browsers whose User opted in. Nothing is sent yet. */
+  /** Pushes to browsers whose User allowed them. */
   webPush: WebPush;
   /** The dice that jumble Candidates. Math.random unless given. */
   random?: Random;
@@ -58,6 +64,8 @@ export interface Me {
   undoUpvote(): Promise<void>;
   /** The Candidate holding their Upvote in the Cycle under way, if any. */
   myUpvote(): Promise<MyUpvote | null>;
+  /** Lets this browser receive pushes for them. Saving the same browser again changes nothing. */
+  subscribeToPush(subscription: WebPushSubscription): Promise<void>;
 }
 
 /** How a trip to Singpass ended: a returning User is signed in; someone new must agree first. */
@@ -66,7 +74,7 @@ export type SingpassOutcome = { outcome: "signed-in"; session: Session } | { out
 export type App = ReturnType<typeof createApp>;
 
 /** The application: everything Yah Lah does, behind one interface. */
-export function createApp({ db, clock, singpass, random = Math.random }: AppDeps) {
+export function createApp({ db, clock, singpass, webPush, random = Math.random }: AppDeps) {
   const sessions = createSessions({ db, clock });
   const logins = createSingpassLogins({ db, clock, singpass });
   const feelings = createFeelings({ db, clock, random });
@@ -75,6 +83,9 @@ export function createApp({ db, clock, singpass, random = Math.random }: AppDeps
     scheduleSeedFeeling: (input) => feelings.scheduleSeed(input),
     scheduledSeedFeelings: () => feelings.scheduledSeeds(),
     unscheduleSeedFeeling: (input) => feelings.unscheduleSeed(input),
+    approvalChoices: () => feelings.approvalChoices(),
+    approve: (feelingId) => feelings.approve(feelingId),
+    withdrawApproval: (polarity) => feelings.withdrawApproval(polarity),
   };
 
   return {
@@ -138,6 +149,13 @@ export function createApp({ db, clock, singpass, random = Math.random }: AppDeps
         upvote: (feelingId) => feelings.upvote(userId, feelingId),
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
+        async subscribeToPush(subscription) {
+          const { endpoint, p256dh, auth } = subscription;
+          await db
+            .insert(schema.pushSubscriptions)
+            .values({ endpoint, p256dh, auth, userId, createdAt: clock.now() })
+            .onConflictDoUpdate({ target: schema.pushSubscriptions.endpoint, set: { p256dh, auth, userId } });
+        },
       };
     },
 
@@ -166,6 +184,33 @@ export function createApp({ db, clock, singpass, random = Math.random }: AppDeps
      */
     operator: {
       scheduleSeedFeeling: (input: SeedFeelingInput) => feelings.scheduleSeed(input),
+
+      /**
+       * Reminds every Admin, on each browser they have allowed pushes on, when a Polarity with
+       * Candidates has no Approval for tomorrow. Run by a daily job before midnight. Nothing depends
+       * on it: without an Approval the Carry-over happens whether or not anyone was reminded.
+       */
+      async sendApprovalReminder(): Promise<{ sent: number }> {
+        const waiting = await feelings.awaitingApproval();
+        if (waiting.length === 0) return { sent: 0 };
+        const body =
+          waiting.length === 2 ? "The Good and Bad Feelings still need your Approval before midnight." : `The ${waiting[0] === "good" ? "Good" : "Bad"} Feeling still needs your Approval before midnight.`;
+        const subscriptions = await db
+          .select({ endpoint: schema.pushSubscriptions.endpoint, p256dh: schema.pushSubscriptions.p256dh, auth: schema.pushSubscriptions.auth })
+          .from(schema.pushSubscriptions)
+          .innerJoin(schema.users, eq(schema.users.id, schema.pushSubscriptions.userId))
+          .where(eq(schema.users.isAdmin, true));
+        let sent = 0;
+        for (const subscription of subscriptions) {
+          try {
+            await webPush.send(subscription, { title: "Approve tomorrow's Feelings", body, link: "/admin" });
+            sent++;
+          } catch (error) {
+            console.error("The Approval reminder couldn't be pushed", error);
+          }
+        }
+        return { sent };
+      },
 
       /** Every User, by Byline, to find the one to make an Admin. */
       async listUsers(): Promise<{ userId: string; byline: string; isAdmin: boolean; joinedAt: Date }[]> {
