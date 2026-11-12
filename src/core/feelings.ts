@@ -3,7 +3,7 @@ import type { Db } from "@/db";
 import { schema } from "@/db";
 import { bylineOf, type Byline } from "./byline";
 import { cycleOf, isCycle, submissionCycleOf, type Cycle } from "./cycle";
-import { FeelingError } from "./errors";
+import { FeelingError, UpvoteError } from "./errors";
 import { normalisedHashtag, refuseLinks, validPolarity, validText, type Polarity } from "./feeling-rules";
 import type { Clock, Random } from "./ports";
 import { isProfane } from "./profanity";
@@ -93,6 +93,24 @@ export interface Candidate {
   hashtag: string;
   byline: Byline;
 }
+
+/** A Candidate as a signed-in User sees it: with their own marks, and still nothing about anyone else's. */
+export interface MyCandidate extends Candidate {
+  /** They wrote it, so they can't Upvote it. */
+  mine: boolean;
+  /** It holds their Upvote for this Cycle. */
+  hasMyUpvote: boolean;
+}
+
+/** The Candidate holding a User's Upvote in the Cycle under way. */
+export interface MyUpvote {
+  feelingId: string;
+  text: string;
+  polarity: Polarity;
+  hashtag: string;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** How many Candidates the Hashtag screen shows at once. */
 export const CANDIDATES_SHOWN = 10;
@@ -273,8 +291,8 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
     },
 
     /** Up to 10 of the Cycle's Candidates for a Polarity and Hashtag, jumbled; all of them when there are 10 or fewer. */
-    async candidates(input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> {
-      if (input.polarity !== "good" && input.polarity !== "bad") return [];
+    async candidates(input: { polarity: Polarity; hashtag: string }): Promise<(Candidate & { submitterId: string })[]> {
+      if (input?.polarity !== "good" && input?.polarity !== "bad") return [];
       let hashtag: string;
       try {
         hashtag = normalisedHashtag(input.hashtag);
@@ -291,7 +309,49 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
         .orderBy(asc(schema.feelings.createdAt), asc(schema.feelings.id));
       return jumbled(rows)
         .slice(0, CANDIDATES_SHOWN)
-        .map(({ submitter, ...feeling }) => ({ ...feeling, byline: bylineOf(submitter, now) }));
+        .map(({ submitter, ...feeling }) => ({ ...feeling, byline: bylineOf(submitter, now), submitterId: submitter.id }));
+    },
+
+    /**
+     * Gives a User's one Upvote for the Cycle to a Candidate, moving it from wherever it was. Not to
+     * their own Feeling, and only to a Candidate of the Cycle under way.
+     */
+    async upvote(userId: string, feelingId: string): Promise<void> {
+      const now = clock.now();
+      const cycle = cycleOf(now);
+      const notACandidate = () => new UpvoteError("NOT_A_CANDIDATE", "Voting on that Feeling has closed. Refresh to see today's.");
+      if (typeof feelingId !== "string" || !UUID.test(feelingId)) throw notACandidate();
+      // One statement: the check and the vote can't come apart, and two taps at once leave one Upvote.
+      const cast = await db.execute(sql`
+        INSERT INTO ${schema.upvotes} (user_id, cycle, feeling_id, cast_at)
+        SELECT ${userId}::uuid, ${cycle}::date, feeling.id, ${now.toISOString()}::timestamptz
+        FROM ${schema.feelings} AS feeling
+        WHERE feeling.id = ${feelingId}::uuid AND feeling.cycle = ${cycle}::date
+          AND feeling.submitter_id IS NOT NULL AND feeling.submitter_id <> ${userId}::uuid
+        ON CONFLICT (user_id, cycle) DO UPDATE SET feeling_id = EXCLUDED.feeling_id, cast_at = EXCLUDED.cast_at
+        RETURNING feeling_id
+      `);
+      if ((cast as unknown as { rows: unknown[] }).rows.length > 0) return;
+      const [own] = await db
+        .select({ id: schema.feelings.id })
+        .from(schema.feelings)
+        .where(and(eq(schema.feelings.id, feelingId), eq(schema.feelings.submitterId, userId), eq(schema.feelings.cycle, cycle)));
+      throw own ? new UpvoteError("OWN_FEELING", "That's your own Feeling, so you can't Yah Lah it.") : notACandidate();
+    },
+
+    /** Takes back a User's Upvote in the Cycle under way. Earlier Cycles' Upvotes stand. */
+    async undoUpvote(userId: string): Promise<void> {
+      await db.delete(schema.upvotes).where(and(eq(schema.upvotes.userId, userId), eq(schema.upvotes.cycle, today())));
+    },
+
+    /** The Candidate holding a User's Upvote in the Cycle under way, if any. */
+    async myUpvote(userId: string): Promise<MyUpvote | null> {
+      const [mine] = await db
+        .select({ feelingId: schema.feelings.id, text: schema.feelings.text, polarity: schema.feelings.polarity, hashtag: schema.feelings.hashtag })
+        .from(schema.upvotes)
+        .innerJoin(schema.feelings, eq(schema.feelings.id, schema.upvotes.feelingId))
+        .where(and(eq(schema.upvotes.userId, userId), eq(schema.upvotes.cycle, today())));
+      return mine ?? null;
     },
   };
 }

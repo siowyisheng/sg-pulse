@@ -4,14 +4,14 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
-import { createFeelings, type Candidate, type CloudWord, type FeelingInput, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
+import { createFeelings, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type ScheduledSeedFeeling, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
 import type { Clock, Random, Singpass, WebPush } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
 export type { Session };
-export type { Candidate, CloudWord, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+export type { Candidate, CloudWord, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -50,6 +50,14 @@ export interface Me {
   submitFeeling(input: FeelingInput): Promise<MyFeeling>;
   /** Their own Feelings and where each stands, newest first. */
   myFeelings(): Promise<MyFeeling[]>;
+  /** The Candidates under a Hashtag, as anyone sees them, plus which is theirs and which holds their Upvote. */
+  candidates(input: { polarity: Polarity; hashtag: string }): Promise<MyCandidate[]>;
+  /** Says Yah Lah: gives their one Upvote for the Cycle to a Candidate, moving it if it was elsewhere. */
+  upvote(feelingId: string): Promise<void>;
+  /** Takes their Upvote back. Possible until the Cycle ends. */
+  undoUpvote(): Promise<void>;
+  /** The Candidate holding their Upvote in the Cycle under way, if any. */
+  myUpvote(): Promise<MyUpvote | null>;
 }
 
 /** How a trip to Singpass ended: a returning User is signed in; someone new must agree first. */
@@ -123,6 +131,13 @@ export function createApp({ db, clock, singpass, random = Math.random }: AppDeps
         submission: () => feelings.submission(userId),
         submitFeeling: (input) => feelings.submit(userId, input),
         myFeelings: () => feelings.mine(userId),
+        async candidates(input) {
+          const [shown, upvote] = await Promise.all([feelings.candidates(input), feelings.myUpvote(userId)]);
+          return shown.map(({ submitterId, ...candidate }) => ({ ...candidate, mine: submitterId === userId, hasMyUpvote: candidate.id === upvote?.feelingId }));
+        },
+        upvote: (feelingId) => feelings.upvote(userId, feelingId),
+        undoUpvote: () => feelings.undoUpvote(userId),
+        myUpvote: () => feelings.myUpvote(userId),
       };
     },
 
@@ -138,7 +153,9 @@ export function createApp({ db, clock, singpass, random = Math.random }: AppDeps
     wordCloud: (polarity: Polarity): Promise<CloudWord[]> => feelings.wordCloud(polarity),
 
     /** Up to 10 jumbled Candidates for a Polarity and Hashtag, with Bylines and no counts. Open to any Visitor. */
-    candidates: (input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> => feelings.candidates(input),
+    async candidates(input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> {
+      return (await feelings.candidates(input)).map(({ submitterId: _submitter, ...candidate }) => candidate);
+    },
 
     /** The Hashtags of the Cycle under way, most used first, for a new Feeling to join. Open to any Visitor. */
     hashtagsInUse: (): Promise<string[]> => feelings.hashtagsInUse(),

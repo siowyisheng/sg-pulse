@@ -1,4 +1,4 @@
-import { boolean, date, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { boolean, date, index, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 
 export const polarity = pgEnum("polarity", ["good", "bad"]);
 
@@ -84,3 +84,23 @@ export const singpassLogins = pgTable("singpass_logins", {
   proofHash: text("proof_hash").unique(),
   person: jsonb("person").$type<PendingPerson>(),
 });
+
+/**
+ * A User's one Upvote in a Cycle, across both Polarities. Moving it rewrites the row; undoing it
+ * removes the row. Once the Cycle has passed it is never touched again.
+ */
+export const upvotes = pgTable(
+  "upvotes",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    cycle: date("cycle", { mode: "string" }).notNull(),
+    feelingId: uuid("feeling_id")
+      .notNull()
+      .references(() => feelings.id, { onDelete: "cascade" }),
+    /** When it was last cast or moved. */
+    castAt: timestamp("cast_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.cycle] }), index("upvotes_by_feeling").on(table.feelingId)],
+);

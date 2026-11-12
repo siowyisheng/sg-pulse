@@ -22,6 +22,13 @@
       "when": 1794484978440,
       "tag": "0002_admins_and_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794510630951,
+      "tag": "0003_upvotes",
+      "breakpoints": true
     }
   ]
 }

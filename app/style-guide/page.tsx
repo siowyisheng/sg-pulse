@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { colors, type ColorName } from "@/theme/tokens";
-import { BylineChip, FromTheTeamChip, PolarityBadge, QueuedForTomorrowChip, StillFeelingItChip, UnderReviewChip } from "@/ui/badges";
+import { BylineChip, FromTheTeamChip, PolarityBadge, QueuedForTomorrowChip, StillFeelingItChip, UnderReviewChip, YourYahLahChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { ModalExample } from "./modal-example";
@@ -35,6 +35,7 @@ export default function StyleGuide() {
           <QueuedForTomorrowChip />
           <StillFeelingItChip />
           <UnderReviewChip />
+          <YourYahLahChip />
         </div>
       </section>
       <section>

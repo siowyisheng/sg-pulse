@@ -2,11 +2,11 @@
 
 Everything that needs a person (you) rather than an agent, in one place. Agents add to this file when their work leaves something for you, and tick nothing: you tick. The two human tickets on GitHub, #3 (Singpass onboarding) and #4 (pre-launch checklist), hold the full acceptance criteria; this file repeats them in short and adds what has come up while building.
 
-Last updated: 13 Nov 2026, after tickets #2, #5 to #10 and #20.
+Last updated: 13 Nov 2026, after tickets #2, #5 to #11 and #20.
 
 ## After every push that changes the database
 
-- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0002_admins_and_submissions.sql` (tickets #8 and #9).
+- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0003_upvotes.sql` (ticket #11): until it is run, tapping Yah Lah fails, and so do the Hashtag screen and the My Feelings page for anyone logged in.
 
 ## Every day, until the Admin area can be used on the live site
 
@@ -15,7 +15,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #10 and #20.
 
 ## Housekeeping on GitHub
 
-- [ ] Look at the voting screen, word clouds and Hashtag screen (#10), then close #10. That unblocks #11 (the Yah Lah button).
+- [ ] Try the Yah Lah button (#11), then close #11. That unblocks #12 (Rising and New Candidates) and #13 (Approval, go-live and Carry-over).
 
 ## Singpass (tickets #3 and #7)
 
@@ -71,6 +71,8 @@ The real Singpass adapter is built (#7) and tested against a fake Singpass serve
 - [ ] When a Hashtag has more than 10 Candidates, the 10 shown are a random pick each time, with a "Show another mix" link. The top, Rising and New mix replaces this in #12.
 - [ ] The front page snaps firmly between the Feelings of the Day and the voting screen: a short swipe springs back, a longer one moves on.
 - [ ] Someone whose Singpass account has no Myinfo profile is told "Singpass has no Myinfo details for you, so we can't set up your Byline."
+- [ ] A Visitor who taps Yah Lah and logs in lands on the front page afterwards, not back on the Candidate they tapped.
+- [ ] After saying Yah Lah the Candidates stay in the order they were in, with a quiet "Your Yah Lah" mark on the one chosen. The My Feelings page also shows today's Yah Lah, with a "Take it back" button.
 
 ## Later, whenever you like
 

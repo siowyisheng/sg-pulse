@@ -11,7 +11,7 @@ import { Modal } from "./modal";
  * another app's browser, where Singpass can't work: there it explains how to open the page in the
  * person's own browser, with a button that copies the link. Nothing is shown until the tap.
  */
-export function LoginButton({ action, variant = "secondary", children }: { action: () => Promise<void>; variant?: ButtonVariant; children: ReactNode }) {
+export function LoginButton({ action, variant = "secondary", large = false, children }: { action: () => Promise<void>; variant?: ButtonVariant; large?: boolean; children: ReactNode }) {
   /** The page's address, once the person has to take it to another browser. */
   const [linkToOpen, setLinkToOpen] = useState<string>();
   const [copied, setCopied] = useState(false);
@@ -34,8 +34,8 @@ export function LoginButton({ action, variant = "secondary", children }: { actio
   return (
     <>
       {/* A form, so the tap still counts if it lands before the page's scripts have loaded. */}
-      <form action={action} onSubmit={stopInsideAnotherApp}>
-        <Button variant={variant} type="submit">
+      <form action={action} onSubmit={stopInsideAnotherApp} className={large ? "wide" : undefined}>
+        <Button variant={variant} type="submit" className={large ? "button-large" : undefined}>
           {children}
         </Button>
       </form>

@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import type { MyFeeling } from "@/core/app";
 import { bylineText } from "@/core/byline";
 import { isDemoMode } from "@/demo-flag";
-import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip } from "@/ui/badges";
+import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip, YourYahLahChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { formatCycle } from "@/web/format";
 import { currentMe } from "@/web/session";
 import { signOutAction } from "../auth-actions";
 import { becomeAdminInDemoAction } from "../demo/actions";
+import { undoUpvoteFromMyFeelingsAction } from "../feelings/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "My Feelings · Yah Lah" };
@@ -31,7 +32,7 @@ function State({ feeling }: { feeling: MyFeeling }) {
 export default async function MyFeelings() {
   const me = await currentMe();
   if (!me) redirect("/sign-in");
-  const [feelings, submission] = await Promise.all([me.myFeelings(), me.submission()]);
+  const [feelings, submission, upvote] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote()]);
   return (
     <main className="page">
       <h1>My Feelings</h1>
@@ -43,6 +44,29 @@ export default async function MyFeelings() {
           <a href="/submit">Write a Feeling{submission.queued ? " for tomorrow" : ""}</a>
         </p>
       )}
+      <h2>My Yah Lah today</h2>
+      {upvote ? (
+        <Card className="stack">
+          <p className="feeling-meta">
+            <PolarityBadge polarity={upvote.polarity} />
+            <a className={`hashtag hashtag-${upvote.polarity}`} href={`/feelings/${upvote.polarity}/${encodeURIComponent(upvote.hashtag)}`}>
+              #{upvote.hashtag}
+            </a>
+            <YourYahLahChip />
+          </p>
+          <p>{upvote.text}</p>
+          <form action={undoUpvoteFromMyFeelingsAction}>
+            <Button variant="ghost" type="submit">
+              Take it back
+            </Button>
+          </form>
+        </Card>
+      ) : (
+        <p className="muted">
+          You haven&apos;t said Yah Lah to a Feeling today. <a href="/#voting">Browse today&apos;s Feelings</a>
+        </p>
+      )}
+      <h2>Feelings I wrote</h2>
       {feelings.length === 0 && <p className="muted">You haven&apos;t written a Feeling yet.</p>}
       {feelings.map((feeling) => (
         <Card key={feeling.cycle} className="stack">

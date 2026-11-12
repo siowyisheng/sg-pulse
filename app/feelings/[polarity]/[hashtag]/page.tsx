@@ -2,11 +2,13 @@ import { ChevronLeft, Shuffle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getApp } from "@/composition";
-import { bylineText } from "@/core/byline";
 import { CANDIDATES_SHOWN } from "@/core/feelings";
-import { BylineChip, PolarityBadge } from "@/ui/badges";
+import { PolarityBadge } from "@/ui/badges";
 import { Card } from "@/ui/card";
 import { decoded, POLARITY_LABEL, polarityFrom } from "@/web/polarity";
+import { currentMe } from "@/web/session";
+import { isSingpassConnected } from "@/web/singpass";
+import { CandidateList, type ShownCandidate } from "./candidate-list";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,11 @@ export default async function HashtagScreen({ params }: Props) {
   const polarity = polarityFrom(raw.polarity);
   if (!polarity) notFound();
   const hashtag = decoded(raw.hashtag);
-  const candidates = await (await getApp()).candidates({ polarity, hashtag });
+  const me = await currentMe();
+  const candidates: ShownCandidate[] = me ? await me.candidates({ polarity, hashtag }) : await (await getApp()).candidates({ polarity, hashtag });
+  const myUpvote = me ? await me.myUpvote() : null;
+  const upvoteIsElsewhere = myUpvote !== null && !candidates.some((candidate) => candidate.hasMyUpvote);
+  const viewer = me ? "user" : isSingpassConnected() ? "visitor" : "visitor-no-login";
   return (
     <main className="page">
       <a className="back-link" href={`/feelings/${polarity}`}>
@@ -38,12 +44,13 @@ export default async function HashtagScreen({ params }: Props) {
           <a href="/submit">Write one</a>
         </Card>
       )}
-      {candidates.map((candidate) => (
-        <Card key={candidate.id} as="article" className="stack">
-          <p className="candidate-text">{candidate.text}</p>
-          <BylineChip>{bylineText(candidate.byline)}</BylineChip>
-        </Card>
-      ))}
+      {/* Keyed by what it shows, so "Show another mix" starts it afresh. */}
+      <CandidateList key={candidates.map((candidate) => candidate.id).join()} candidates={candidates} viewer={viewer} upvoteIsElsewhere={upvoteIsElsewhere} />
+      {upvoteIsElsewhere && (
+        <p className="caption muted">
+          Your Yah Lah today is on another Feeling: <a href="/me">see it</a>.
+        </p>
+      )}
       {candidates.length === CANDIDATES_SHOWN && (
         <p className="feeling-meta">
           <span className="caption muted">Up to {CANDIDATES_SHOWN} show at a time, in no particular order.</span>

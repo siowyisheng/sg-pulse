@@ -1,4 +1,4 @@
-import { Clock, Frown, Hourglass, Repeat, Smile, Users } from "lucide-react";
+import { Check, Clock, Frown, Hourglass, Repeat, Smile, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Polarity } from "@/core/feeling-rules";
 
@@ -66,4 +66,14 @@ export function UnderReviewChip() {
 /** Where something stands, in plain words: "Candidate today", "Expired". */
 export function StateChip({ children }: { children: ReactNode }) {
   return <span className="chip chip-neutral">{children}</span>;
+}
+
+/** Marks the Candidate holding the User's Upvote: clear, but quiet. */
+export function YourYahLahChip() {
+  return (
+    <span className="chip chip-byline">
+      <Check aria-hidden="true" size={14} />
+      Your Yah Lah
+    </span>
+  );
 }

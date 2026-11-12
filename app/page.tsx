@@ -50,7 +50,7 @@ export default async function Home() {
         {/* The ad sits below both Feelings, never between or above them. */}
         {ad && <AdSlot ad={ad} />}
       </main>
-      <section className="voting-screen" aria-labelledby="voting-title">
+      <section id="voting" className="voting-screen" aria-labelledby="voting-title">
         <h2 id="voting-title" className="today">
           What will Singapore feel tomorrow? Pick a mood to see today&apos;s Feelings.
         </h2>

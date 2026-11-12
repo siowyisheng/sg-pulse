@@ -87,5 +87,17 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return JSON.stringify(rows);
   }
 
-  return { app, clock, webPush, random, logIn, signUp, signUpAdmin, everythingStored };
+  /**
+   * How many Upvotes each Feeling has in a Cycle (today's unless given), by its text. Read straight
+   * from storage: the application shows counts to nobody until a winner is announced.
+   */
+  async function tally(cycle = app.currentCycle()): Promise<Record<string, number>> {
+    const counted = await client.query<{ text: string; upvotes: number }>(
+      `SELECT feelings.text, count(*)::int AS upvotes FROM upvotes JOIN feelings ON feelings.id = upvotes.feeling_id WHERE upvotes.cycle = $1 GROUP BY feelings.text`,
+      [cycle],
+    );
+    return Object.fromEntries(counted.rows.map((row) => [row.text, row.upvotes]));
+  }
+
+  return { app, clock, webPush, random, tally, logIn, signUp, signUpAdmin, everythingStored };
 }
