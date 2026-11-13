@@ -36,6 +36,9 @@ colors:
       dark_mode_text: "#00B894"
       tint: "#EBF9F6"
       dark_mode_tint: "#19373C"
+      highlight: "#9EE4D6"
+      dark_mode_highlight: "#0B5248"
+      highlight_usage: "A stronger wash for a highlighter stroke or a glow behind ink, on the front page looks. Ink on it, never teal text."
       usage: "Good Polarity. The fill is only 2.5:1 on white, so it is a fill or a border, never text or an icon on white."
       contrast: "Text 4.9:1 on white"
     bad_feeling_dusk_violet:
@@ -43,6 +46,9 @@ colors:
       dark_mode_text: "#B39DDB"
       tint: "#EDEAF2"
       dark_mode_tint: "#363347"
+      highlight: "#D3CAE0"
+      dark_mode_highlight: "#43335E"
+      highlight_usage: "As the Good highlight."
       usage: "Bad Polarity."
       contrast: "6.7:1 on white"
   neutrals:

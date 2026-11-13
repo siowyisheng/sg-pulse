@@ -1,7 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { ApprovalChoice } from "@/core/app";
+import { FRONT_PAGE_LOOKS, type ApprovalChoice } from "@/core/app";
 import { bylineText } from "@/core/byline";
 import { nextCycle } from "@/core/cycle";
 import type { Polarity } from "@/core/feeling-rules";
@@ -9,10 +9,11 @@ import { getApp } from "@/composition";
 import { BylineChip, FromTheTeamChip, PolarityBadge, StateChip, UnderReviewChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
+import { LOOK_DESCRIPTIONS } from "@/ui/front-page-looks";
 import { formatCycle, formatMoment, yahLahs } from "@/web/format";
 import { POLARITY_LABEL } from "@/web/polarity";
 import { currentMe } from "@/web/session";
-import { approveAction, clearReportAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
+import { approveAction, clearReportAction, setFrontPageLookAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
 import { NoticeForm } from "./notice-form";
 import { SeedForm } from "./seed-form";
 
@@ -63,7 +64,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const showing = [live.good, live.bad].filter((feeling) => feeling !== null);
   const missed = (await searchParams).problem === "NOT_A_CHOICE";
   const today = (await getApp()).currentCycle();
-  const scheduled = await me.asAdmin().scheduledSeedFeelings();
+  const [scheduled, look] = await Promise.all([me.asAdmin().scheduledSeedFeelings(), (await getApp()).frontPageLook()]);
   return (
     <main className="page">
       <h1>Admin</h1>
@@ -165,6 +166,31 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <p className="muted">Written by the team, in your own words: never copied from anywhere. It shows as &ldquo;From the team&rdquo;, with no Byline.</p>
         <SeedForm firstCycle={today} defaultCycle={nextCycle(today)} />
       </Card>
+      <section className="stack">
+        <h2>Front page look</h2>
+        <p className="muted">How the first screen of the front page is laid out, for everyone. Preview a look before you switch; switching is immediate and you can switch back at any time.</p>
+        {FRONT_PAGE_LOOKS.map((option) => (
+          <Card key={option} className="stack wide">
+            <h3 className="feeling-meta">
+              {LOOK_DESCRIPTIONS[option].name}
+              {option === look && <StateChip>Showing now</StateChip>}
+            </h3>
+            <p className="muted">{LOOK_DESCRIPTIONS[option].description}</p>
+            <div className="actions">
+              <a className="button button-ghost" href={`/?look=${option}`} target="_blank" rel="noopener">
+                Preview
+              </a>
+              {option !== look && (
+                <form action={setFrontPageLookAction.bind(null, option)}>
+                  <Button variant="secondary" type="submit">
+                    Use this look
+                  </Button>
+                </form>
+              )}
+            </div>
+          </Card>
+        ))}
+      </section>
       <section className="stack">
         <h2>Scheduled</h2>
         {scheduled.length === 0 && <p className="muted">Nothing is scheduled from today on.</p>}

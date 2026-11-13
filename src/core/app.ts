@@ -5,6 +5,7 @@ import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
 import { createFeedback, type FeedbackInput } from "./feedback";
+import { createFrontPageLook, type FrontPageLook } from "./front-page-look";
 import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
 import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type PublishedFeeling, type ScheduledSeedFeeling, type SharePreview, type SeedFeelingInput, type Submission } from "./feelings";
@@ -16,6 +17,7 @@ import { createSingpassLogins } from "./singpass-logins";
 export type { Session };
 export type { AuditEntry, ReportedFeeling } from "./moderation";
 export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFeeling, SharePreview, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
+export { FRONT_PAGE_LOOKS, isFrontPageLook, type FrontPageLook } from "./front-page-look";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -43,6 +45,8 @@ export interface Admin {
   removalRequests(): Promise<RemovalRequest[]>;
   /** The newest entries of the record of submissions, Reports and Admin actions. */
   auditLog(): Promise<AuditEntry[]>;
+  /** Switches the Front page look for everyone, at once. Refused for a look that doesn't exist. */
+  setFrontPageLook(look: string): Promise<void>;
 }
 
 export interface AppDeps {
@@ -111,6 +115,7 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
 
   const moderation = createModeration({ db, clock });
   const privacy = createPrivacy({ db, clock });
+  const frontPageLook = createFrontPageLook({ db, clock });
   const feedback = createFeedback({ db, clock, mailer, to: feedbackTo, record: moderation.record });
 
   /** Forgets a browser the push service says is gone. */
@@ -142,6 +147,10 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
     setCorrectionNotice: (feelingId, notice) => moderation.setCorrectionNotice(adminId, feelingId, notice),
     removalRequests: () => privacy.removalRequests(),
     auditLog: () => moderation.auditLog(),
+    async setFrontPageLook(look) {
+      const chosen = await frontPageLook.set(look);
+      await moderation.record(adminId, "front-page-look", null, chosen);
+    },
   });
 
   return {
@@ -238,6 +247,9 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
 
     /** The Feelings of the Day for the Cycle it is right now in Singapore. Open to any Visitor. */
     feelingsOfTheDay: (): Promise<FeelingsOfTheDay> => feelings.ofTheDay(),
+
+    /** How the front page's first screen is laid out, as an Admin last chose. Open to any Visitor. */
+    frontPageLook: (): Promise<FrontPageLook> => frontPageLook.current(),
 
     /** Past Feelings of the Day, newest day first, a page of days at a time. Open to any Visitor. */
     archive: (page?: { before?: string; days?: number }): Promise<PublishedFeeling[]> => feelings.archive(page),

@@ -15,7 +15,8 @@ import { ShareButton } from "./share-button";
 export function PublishedFeelingBody({ feeling, carriedOver = false, size = "regular", children }: { feeling: PublishedFeeling; carriedOver?: boolean; size?: "large" | "regular"; children?: ReactNode }) {
   return (
     <>
-      <p className={size === "large" ? "feeling-text" : "candidate-text"}>{feeling.text}</p>
+      {/* The inner span lets a front page look style each line of the text, as a highlighter stroke. */}
+      <p className={size === "large" ? "feeling-text" : "candidate-text"}>{size === "large" ? <span className="feeling-text-line">{feeling.text}</span> : feeling.text}</p>
       {feeling.correctionNotice && (
         <p className="notice" role="note">
           <Megaphone aria-hidden="true" size={18} />

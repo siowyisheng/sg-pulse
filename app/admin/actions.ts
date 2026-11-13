@@ -93,3 +93,16 @@ export async function setCorrectionNoticeAction(feelingId: string, _previous: Fo
   revalidatePath("/admin");
   return { message: "Saved." };
 }
+
+/** Switches the front page look for everyone. */
+export async function setFrontPageLookAction(look: string): Promise<void> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return;
+  try {
+    await me.asAdmin().setFrontPageLook(look);
+  } catch (error) {
+    messageOf(error);
+  }
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
