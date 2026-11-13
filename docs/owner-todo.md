@@ -6,12 +6,16 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 
 ## After every push that changes the database
 
-- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0005_moderation.sql` (tickets #14, #15 and #17), `drizzle/0006_daily_push.sql` (#19) and `drizzle/0007_removal_and_deletion.sql` (#18): run it once and it applies all three. Until it is run, the front page and most other pages fail on the live site.
+- [ ] Run `npm run db:migrate` against Neon. A push needs it when it adds a file under `drizzle/`. **Needed now** for `drizzle/0005_moderation.sql` (tickets #14, #15 and #17), `drizzle/0006_daily_push.sql` (#19) `drizzle/0007_removal_and_deletion.sql` (#18) and `drizzle/0008_front_page_look.sql` (the front page looks): run it once and it applies all four. Until it is run, the front page and most other pages fail on the live site.
 
 ## Every day, until the Admin area can be used on the live site
 
 - [ ] Add tomorrow's Good and Bad Seed Feelings: `npm run seed -- 2026-11-14 good kopi "your text"`. Without them the front page says "Nothing here today." Write them yourself; copy nothing from Twitter/X or anywhere else.
   - The Admin area (`/admin`) does the same job with a form, once Singpass is connected and you have made yourself an Admin (see Singpass below).
+
+## Front page look
+
+- [ ] Choose the front page look. Four are built: Original (what shows now), Sunrise and dusk, Highlighter and Postcards. In `/admin`, under "Front page look", press Preview on each to see it on your phone, then "Use this look". It switches for everyone at once and you can switch back any time. Without the `0008` migration above the front page fails, so run that first. Locally, `npm run demo` and open `/?look=sunrise` (or `highlighter`, `postcards`) to compare without signing in.
 
 ## Housekeeping on GitHub
 

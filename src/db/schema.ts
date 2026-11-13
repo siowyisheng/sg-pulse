@@ -178,3 +178,10 @@ export const removalRequests = pgTable(
   },
   (table) => [index("removal_requests_by_feeling").on(table.feelingId)],
 );
+
+/** Settings an Admin changes from the site, one row each, by name. A missing row means the default. */
+export const siteSettings = pgTable("site_settings", {
+  name: text("name").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});

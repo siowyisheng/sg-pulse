@@ -93,6 +93,10 @@ _Avoid_: Delete, ban
 **Removal request**:
 A User's ask that a Feeling of theirs that has been a Feeling of the Day be removed, archive entry included. The Admin honours it within 24 hours, by a Take-down. Deleting an account does not make one; a User can ask for it in the same go.
 
+**Front page look**:
+How the first screen of the front page is laid out (Original, Sunrise and dusk, Highlighter, Postcards). Chosen by an Admin for everyone; the Feelings shown are the same whichever it is.
+_Avoid_: Theme, skin, layout
+
 **Feedback**:
 A problem or a suggestion a User sends the owner by email, from the Feedback link. It is not a way for Users to contact each other, and nothing is stored of it but that a User sent one.
 _Avoid_: Report (a Report is about a Feeling)

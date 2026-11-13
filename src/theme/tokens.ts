@@ -33,10 +33,14 @@ export const colors = {
     goodFill: "#00B894",
     goodText: "#00806A",
     goodTint: "#EBF9F6",
+    /** A stronger wash of teal, for a highlighter stroke or a glow behind ink. */
+    goodHighlight: "#9EE4D6",
     /** Dusk Violet. */
     badFill: "#6B4E96",
     badText: "#6B4E96",
     badTint: "#EDEAF2",
+    /** A stronger wash of violet, for a highlighter stroke or a glow behind ink. */
+    badHighlight: "#D3CAE0",
     neutralTint: "#F2F2F4",
     warning: "#FFB800",
     warningTint: "#FFF6E0",
@@ -61,9 +65,11 @@ export const colors = {
     goodFill: "#00B894",
     goodText: "#00B894",
     goodTint: "#19373C",
+    goodHighlight: "#0B5248",
     badFill: "#6B4E96",
     badText: "#B39DDB",
     badTint: "#363347",
+    badHighlight: "#43335E",
     neutralTint: "#30313E",
     warning: "#FFB800",
     warningTint: "#423724",
@@ -102,6 +108,8 @@ export const sizes = {
   header: "56px",
   /** The widest a column of reading gets. */
   column: "560px",
+  /** How much of the voting screen shows under the first screen, so it is plain there is more below. */
+  peek: "64px",
   /** The round "+" on the voting screen. */
   writeButton: "56px",
   /** The ad slot: a standard mobile banner. */
@@ -161,6 +169,16 @@ export const pairs: ColorPair[] = [
   { use: "Correction notice", text: "ink", background: "warningTint" },
   { use: "Form fields", text: "ink", background: "surface" },
   { use: "Form field border", text: "line", background: "surface", large: true },
+  { use: "Front page looks: text on a Good field or highlighter stroke", text: "ink", background: "goodHighlight" },
+  { use: "Front page looks: text on a Bad field or highlighter stroke", text: "ink", background: "badHighlight" },
+  { use: "Front page looks: text on a Good tint", text: "ink", background: "goodTint" },
+  { use: "Front page looks: text on a Bad tint", text: "ink", background: "badTint" },
+  { use: "Front page looks: secondary text on a Good tint", text: "inkMuted", background: "goodTint" },
+  { use: "Front page looks: secondary text on a Bad tint", text: "inkMuted", background: "badTint" },
+  { use: "Front page looks: Good Hashtag on a Good tint", text: "goodText", background: "goodTint" },
+  { use: "Front page looks: Bad Hashtag on a Bad tint", text: "badText", background: "badTint" },
+  { use: "Front page looks: Good icon on a Good field", text: "goodText", background: "goodHighlight", large: true },
+  { use: "Front page looks: Bad icon on a Bad field", text: "badText", background: "badHighlight", large: true },
 ];
 
 const kebab = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
