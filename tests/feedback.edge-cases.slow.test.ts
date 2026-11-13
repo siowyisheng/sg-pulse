@@ -60,6 +60,7 @@ describe("a bot", () => {
   it("that fills the hidden field is told it worked, and nothing is sent or counted", async () => {
     const w = await signedIn();
     await expect(w.me.sendFeedback({ kind: "problem", message: "Buy pills", website: "http://spam.example" })).resolves.toBeUndefined();
+    await expect(w.me.sendFeedback({ kind: "problem", message: "", website: "x" })).resolves.toBeUndefined();
     expect(w.mailer.sent).toEqual([]);
     expect((await w.app.operator.listUsers()).length).toBe(1);
   });

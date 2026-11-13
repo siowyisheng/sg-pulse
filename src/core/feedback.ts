@@ -50,14 +50,14 @@ export function createFeedback({
   return {
     async send(userId: string, byline: Byline, input: FeedbackInput): Promise<void> {
       if (!to) throw new FeedbackError("NOT_OPEN", "Feedback isn't switched on yet.");
+      // A bot filled the field no person sees: it is told it worked, and nothing is sent.
+      if (singleLine(String(input.website ?? "")) !== "") return;
       if (input.kind !== "problem" && input.kind !== "suggestion") throw new FeedbackError("NO_KIND", "Choose Problem or Suggestion.");
       const message = String(input.message ?? "").trim();
       if (message === "") throw new FeedbackError("EMPTY", "Write your message first.");
       if ([...message].length > FEEDBACK_MAX_CHARACTERS) throw new FeedbackError("TOO_LONG", `Keep it to ${FEEDBACK_MAX_CHARACTERS} characters.`);
       const replyTo = String(input.replyTo ?? "").trim();
       if (replyTo !== "" && (!EMAIL.test(replyTo) || replyTo.length > 254)) throw new FeedbackError("BAD_REPLY_TO", "That doesn't look like an email address. You can leave it empty.");
-      // A bot filled the field no person sees: it is told it worked, and nothing is sent.
-      if (singleLine(String(input.website ?? "")) !== "") return;
 
       const now = clock.now();
       const dayStart = new Date(Math.floor((now.getTime() + SGT_OFFSET_MS) / DAY_MS) * DAY_MS - SGT_OFFSET_MS);

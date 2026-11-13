@@ -40,6 +40,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 - [ ] Make a free Resend account (resend.com) and create an API key. To send from your own domain, add and verify the domain in Resend; for a first try Resend's test sender (`onboarding@resend.dev`) works but only to the email you signed up with.
 - [ ] In Vercel, set `FEEDBACK_TO` (the address to read feedback at, `golden.triangle.software.sg@gmail.com`), `RESEND_API_KEY` and `FEEDBACK_FROM` (for example `Yah Lah <feedback@your-domain>`), then redeploy. Until all three are set no Feedback link shows and `/feedback` is a 404.
 - [ ] Send a test from a phone (log in, tap "Feedback" at the bottom of the front page) and check it arrives, and that Reply goes to the address typed in "Reply to".
+- [ ] The log line for a sent message carries the sender's internal ID (like every other log line), so you can see someone sending too much; the email itself has only their Byline. Two sends at the same instant could squeeze past the 5-a-day limit.
 - [ ] Only signed-in Users can send, 5 a day each. Nothing is kept but a log line saying a User sent one; the message and Reply to address live only in your inbox.
 
 ## When someone asks for a Feeling to be removed, or deletes their account (ticket #18)
