@@ -25,3 +25,7 @@ Tests go through the application interface only (`createTestApp` in `src/testing
 ## Owner to-dos
 
 `docs/owner-todo.md` lists everything that needs the owner rather than an agent. When your work leaves something for them (a migration to run, an account to set up, a decision to confirm), add it there in the same commit. Never tick an item yourself.
+
+## Where to work
+
+Work in your own clone of siowyisheng/sg-pulse and push your branch to GitHub. Never edit, commit or run git in the owner's local folder, even when it is connected to the session: they pull from GitHub themselves.
