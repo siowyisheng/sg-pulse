@@ -134,6 +134,7 @@ export const pairs: ColorPair[] = [
   { use: "Text on a card", text: "ink", background: "surface" },
   { use: "Secondary text on a card", text: "inkMuted", background: "surface" },
   { use: "Links on a card", text: "primaryText", background: "surface" },
+  { use: "A chosen option in a neutral choice, such as Problem or Suggestion", text: "primaryText", background: "neutralTint" },
   { use: "Good Hashtag and label on a card", text: "goodText", background: "surface" },
   { use: "Bad Hashtag and label on a card", text: "badText", background: "surface" },
   { use: "Text in a modal", text: "ink", background: "surfaceRaised" },
