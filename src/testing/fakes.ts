@@ -1,4 +1,4 @@
-import { PushSubscriptionGoneError, type Clock, type WebPush, type WebPushPayload, type WebPushSubscription } from "@/core/ports";
+import { PushSubscriptionGoneError, type Clock, type Email, type Mailer, type WebPush, type WebPushPayload, type WebPushSubscription } from "@/core/ports";
 
 interface Duration {
   hours?: number;
@@ -45,6 +45,21 @@ export class FakeWebPush implements WebPush {
     if (this.gone.has(subscription.endpoint)) throw new PushSubscriptionGoneError("gone");
     if (this.outage) throw this.outage;
     this.sent.push({ subscription, payload });
+  }
+}
+
+export class FakeMailer implements Mailer {
+  readonly sent: Email[] = [];
+  private outage: Error | undefined;
+
+  /** Make every send fail with `error`, as if the mail provider were down. */
+  failWith(error: Error | undefined) {
+    this.outage = error;
+  }
+
+  async send(email: Email) {
+    if (this.outage) throw this.outage;
+    this.sent.push(email);
   }
 }
 

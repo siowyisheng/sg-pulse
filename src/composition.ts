@@ -1,11 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import type { JWK } from "jose";
+import { createResendMailer } from "@/adapters/resend";
 import { createWebPush } from "@/adapters/web-push";
 import { createSingpassFapi, SINGPASS_ISSUERS } from "@/adapters/singpass-fapi";
 import { createApp, type App } from "@/core/app";
 import { parseSingpassPrivateJwks } from "@/core/jwks";
-import type { Clock, Singpass, WebPush } from "@/core/ports";
+import type { Clock, Mailer, Singpass, WebPush } from "@/core/ports";
 import { schema } from "@/db";
 import { isDemoMode } from "@/demo-flag";
 
@@ -53,6 +54,19 @@ export function getWebPush(env: Record<string, string | undefined> = process.env
   return createWebPush({ publicKey, privateKey, subject: env.VAPID_SUBJECT || "mailto:admin@example.com" });
 }
 
+/** Feedback is on once the owner's address, a Resend key and a sender address are all set. Null when off. */
+export function feedbackSettings(env: Record<string, string | undefined> = process.env): { to: string; apiKey: string; from: string } | null {
+  const to = env.FEEDBACK_TO?.trim();
+  const apiKey = env.RESEND_API_KEY?.trim();
+  const from = env.FEEDBACK_FROM?.trim();
+  return to && apiKey && from ? { to, apiKey, from } : null;
+}
+
+function createMailer(): Mailer {
+  const settings = feedbackSettings();
+  return settings ? createResendMailer(settings) : { send: async () => notConfigured("Email") };
+}
+
 let webPush: WebPush | undefined;
 const systemClock: Clock = { now: () => new Date() };
 
@@ -69,5 +83,5 @@ function requireEnv(name: string): string {
 export async function getApp(): Promise<App> {
   if (isDemoMode()) return (await import("@/demo")).getDemoApp();
   const db = drizzle(neon(requireEnv("DATABASE_URL")), { schema });
-  return createApp({ db, clock: systemClock, singpass: (singpass ??= getSingpass()), webPush: (webPush ??= getWebPush()) });
+  return createApp({ db, clock: systemClock, singpass: (singpass ??= getSingpass()), webPush: (webPush ??= getWebPush()), mailer: createMailer(), feedbackTo: feedbackSettings()?.to ?? null });
 }

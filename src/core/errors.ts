@@ -63,3 +63,7 @@ export class ModerationError extends UserFacingError<"NO_SUCH_FEELING" | "NOT_RE
 export type PrivacyErrorCode = "NOT_YOUR_WINNER";
 
 export class PrivacyError extends UserFacingError<PrivacyErrorCode> {}
+
+export type FeedbackErrorCode = "NOT_OPEN" | "NO_KIND" | "EMPTY" | "TOO_LONG" | "BAD_REPLY_TO" | "LIMIT" | "NOT_SENT";
+
+export class FeedbackError extends UserFacingError<FeedbackErrorCode> {}

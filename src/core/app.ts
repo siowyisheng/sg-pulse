@@ -4,11 +4,12 @@ import { schema } from "@/db";
 import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
+import { createFeedback, type FeedbackInput } from "./feedback";
 import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
 import { createFeelings, type ApprovalChoices, type Candidate, type CloudWord, type FeelingInput, type MyCandidate, type MyUpvote, type FeelingsOfTheDay, type MyFeeling, type PublishedFeeling, type ScheduledSeedFeeling, type SharePreview, type SeedFeelingInput, type Submission } from "./feelings";
 import type { Polarity } from "./feeling-rules";
-import { PushSubscriptionGoneError, type Clock, type Random, type Singpass, type WebPush, type WebPushSubscription } from "./ports";
+import { PushSubscriptionGoneError, type Clock, type Mailer, type Random, type Singpass, type WebPush, type WebPushSubscription } from "./ports";
 import { createSessions, type Session } from "./sessions";
 import { createSingpassLogins } from "./singpass-logins";
 
@@ -51,6 +52,10 @@ export interface AppDeps {
   singpass: Singpass;
   /** Pushes to browsers whose User allowed them. */
   webPush: WebPush;
+  /** Sends email: only feedback, for now. */
+  mailer: Mailer;
+  /** Where feedback goes. Null when it is switched off. */
+  feedbackTo: string | null;
   /** The dice that jumble Candidates. Math.random unless given. */
   random?: Random;
 }
@@ -83,6 +88,8 @@ export interface Me {
   report(feelingId: string): Promise<void>;
   /** A Timeout: until then they can't Report (everything else still works). Null when they can. */
   reportingTimedOutUntil: Date | null;
+  /** Sends the owner a problem or a suggestion by email, after checking it. Refused with a plain message if empty, too long, over today's limit, or the email didn't go. */
+  sendFeedback(input: FeedbackInput): Promise<void>;
   /** Asks for a Feeling of theirs that has been a Feeling of the Day to be removed, archive entry included. The Admin has a day to honour it. */
   requestRemoval(feelingId: string): Promise<void>;
   /** Deletes their account and what is held about them. A Feeling of the Day of theirs stays, with its Byline, until removal is asked for; `alsoRemoveWinners` asks for that on all of them at once, so nothing is left to ask for once they have no account. Their session ends with it. */
@@ -97,13 +104,14 @@ export type SingpassOutcome = { outcome: "signed-in"; session: Session } | { out
 export type App = ReturnType<typeof createApp>;
 
 /** The application: everything Yah Lah does, behind one interface. */
-export function createApp({ db, clock, singpass, webPush, random = Math.random }: AppDeps) {
+export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, random = Math.random }: AppDeps) {
   const sessions = createSessions({ db, clock });
   const logins = createSingpassLogins({ db, clock, singpass });
   const feelings = createFeelings({ db, clock, random });
 
   const moderation = createModeration({ db, clock });
   const privacy = createPrivacy({ db, clock });
+  const feedback = createFeedback({ db, clock, mailer, to: feedbackTo, record: moderation.record });
 
   /** Forgets a browser the push service says is gone. */
   const forgetSubscription = (endpoint: string) => db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, endpoint));
@@ -202,6 +210,7 @@ export function createApp({ db, clock, singpass, webPush, random = Math.random }
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
         report: (feelingId) => moderation.report(visit.user, feelingId),
+        sendFeedback: (input) => feedback.send(userId, bylineOf(visit.user, clock.now()), input),
         requestRemoval: (feelingId) => privacy.requestRemoval(userId, feelingId),
         async deleteAccount(options) {
           if (options?.alsoRemoveWinners) {

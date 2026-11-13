@@ -5,13 +5,15 @@ import { codeFor, createFakeSingpass } from "@/adapters/fake-singpass";
 import { createApp } from "@/core/app";
 import type { Singpass, SingpassPerson } from "@/core/ports";
 import { schema } from "@/db";
-import { FakeClock, FakeRandom, FakeWebPush } from "./fakes";
+import { FakeClock, FakeMailer, FakeRandom, FakeWebPush } from "./fakes";
 
 export interface TestAppOptions {
   /** Start time of the controllable clock. */
   now?: string;
   /** The fake Singpass unless a test brings its own (such as the real adapter against a fake server). */
   singpass?: Singpass;
+  /** Where feedback goes. Null switches it off. A test address unless given. */
+  feedbackTo?: string | null;
 }
 
 /**
@@ -62,8 +64,9 @@ export async function createTestApp(options: TestAppOptions = {}) {
 
   const clock = new FakeClock(options.now ?? "2026-01-01T00:00:00+08:00");
   const webPush = new FakeWebPush();
+  const mailer = new FakeMailer();
   const random = new FakeRandom();
-  const app = createApp({ db, clock, webPush, random: random.next, singpass: options.singpass ?? createFakeSingpass() });
+  const app = createApp({ db, clock, webPush, mailer, feedbackTo: options.feedbackTo === undefined ? "owner@example.com" : options.feedbackTo, random: random.next, singpass: options.singpass ?? createFakeSingpass() });
 
   /** A round trip to the fake Singpass as this person, in one browser. */
   async function logIn(person: SingpassPerson) {
@@ -124,5 +127,5 @@ export async function createTestApp(options: TestAppOptions = {}) {
     };
   }
 
-  return { app, clock, webPush, random, tally, logIn, signUp, signUpAdmin, everythingStored, refuseWritesTo };
+  return { app, clock, webPush, mailer, random, tally, logIn, signUp, signUpAdmin, everythingStored, refuseWritesTo };
 }

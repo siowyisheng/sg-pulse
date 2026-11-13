@@ -7,6 +7,7 @@ import { BylineChip, PolarityBadge, QueuedForTomorrowChip, StateChip, UnderRevie
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { formatCycle, formatMoment } from "@/web/format";
+import { feedbackIsOn } from "@/web/feedback";
 import { currentMe } from "@/web/session";
 import { signOutAction } from "../auth-actions";
 import { becomeAdminInDemoAction } from "../demo/actions";
@@ -121,6 +122,13 @@ export default async function MyFeelings() {
       <p>
         <a href="/me/delete">Delete my account</a>
       </p>
+      {feedbackIsOn() && (
+        <p>
+          <a className="quiet-link" href="/feedback?from=/me">
+            Feedback
+          </a>
+        </p>
+      )}
     </main>
   );
 }

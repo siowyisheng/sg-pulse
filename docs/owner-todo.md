@@ -35,6 +35,13 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 - [ ] Try it on a real phone: log in, accept the prompt, then call `/api/cron/morning` with `Authorization: Bearer <CRON_SECRET>` and see the notification arrive. On an iPhone it only works once Yah Lah is added to the Home Screen.
 - [ ] Hobby allows two scheduled jobs and the site now uses both (the Approval reminder and the morning job). A third needs Pro, or its work has to go into one of these.
 
+## Switching on Feedback (ticket #21)
+
+- [ ] Make a free Resend account (resend.com) and create an API key. To send from your own domain, add and verify the domain in Resend; for a first try Resend's test sender (`onboarding@resend.dev`) works but only to the email you signed up with.
+- [ ] In Vercel, set `FEEDBACK_TO` (the address to read feedback at, `golden.triangle.software.sg@gmail.com`), `RESEND_API_KEY` and `FEEDBACK_FROM` (for example `Yah Lah <feedback@your-domain>`), then redeploy. Until all three are set no Feedback link shows and `/feedback` is a 404.
+- [ ] Send a test from a phone (log in, tap "Feedback" at the bottom of the front page) and check it arrives, and that Reply goes to the address typed in "Reply to".
+- [ ] Only signed-in Users can send, 5 a day each. Nothing is kept but a log line saying a User sent one; the message and Reply to address live only in your inbox.
+
 ## When someone asks for a Feeling to be removed, or deletes their account (ticket #18)
 
 - [ ] Look at "Removal requests" at the top of `/admin` at least daily: each has a "due by" time, 24 hours after it was asked. "Remove it" takes the Feeling off the front page and out of the archive.

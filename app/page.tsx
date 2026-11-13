@@ -8,6 +8,7 @@ import { PublishedFeelingBody } from "@/ui/published-feeling";
 import { Card } from "@/ui/card";
 import { commercialSettings } from "@/web/commercial";
 import { formatCycle } from "@/web/format";
+import { feedbackIsOn } from "@/web/feedback";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
 
@@ -68,12 +69,21 @@ export default async function Home() {
           </a>
         )}
       </section>
-      {supportUrl && (
+      {(supportUrl || (me && feedbackIsOn())) && (
         <footer className="site-footer">
-          <a href={supportUrl} target="_blank" rel="noopener noreferrer">
-            Support Yah Lah
-          </a>
-          <p className="caption muted">Chip in to help keep Yah Lah running. This is support for the site, not a charity donation.</p>
+          {supportUrl && (
+            <>
+              <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+                Support Yah Lah
+              </a>
+              <p className="caption muted">Chip in to help keep Yah Lah running. This is support for the site, not a charity donation.</p>
+            </>
+          )}
+          {me && feedbackIsOn() && (
+            <a className="quiet-link" href="/feedback?from=/">
+              Feedback
+            </a>
+          )}
         </footer>
       )}
     </div>

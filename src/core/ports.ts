@@ -64,3 +64,17 @@ export interface WebPush {
 export class NoMyinfoProfileError extends Error {
   override name = "NoMyinfoProfileError";
 }
+
+/** An email to send. Plain text only. */
+export interface Email {
+  to: string;
+  subject: string;
+  text: string;
+  /** Where the recipient's reply should go, if not back to the sender. */
+  replyTo?: string;
+}
+
+/** Sends email. Any error it throws means the email may not have been sent. */
+export interface Mailer {
+  send(email: Email): Promise<void>;
+}

@@ -533,11 +533,27 @@ ul.stack li {
   text-align: center;
 }
 
+.site-footer .quiet-link {
+  font-weight: var(--type-body-weight);
+}
+
+.quiet-link {
+  color: var(--color-ink-muted);
+}
+
 .site-footer a {
   display: inline-flex;
   align-items: center;
   min-height: var(--size-touch-target);
   font-weight: var(--type-body-bold-weight);
+}
+
+.trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 /* Writing a Feeling */
@@ -620,6 +636,12 @@ ul.stack li {
   border-color: var(--color-good-text);
   background: var(--color-good-tint);
   color: var(--color-good-text);
+}
+
+.toggle-neutral input:checked + span {
+  border-color: var(--color-primary-text);
+  background: var(--color-neutral-tint);
+  color: var(--color-primary-text);
 }
 
 .toggle-bad input:checked + span {

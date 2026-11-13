@@ -55,6 +55,8 @@ async function build(): Promise<App> {
     clock,
     singpass: createFakeSingpass(),
     webPush: { send: async (_subscription, payload) => console.log(`[demo] push: ${payload.title}: ${payload.body}`) },
+    mailer: { send: async (email) => console.log(`[demo] email to ${email.to}: ${email.subject}`) },
+    feedbackTo: "demo@example.com",
   });
   // The past week, today and the next fortnight, so the demo can be left running past midnight.
   for (let day = -7; day < 14; day++) {
