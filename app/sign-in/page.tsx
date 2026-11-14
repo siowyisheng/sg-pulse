@@ -6,6 +6,7 @@ import { LoginButton } from "@/ui/login-gate";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected, singpassProblem } from "@/web/singpass";
 import { startSingpassAction } from "../auth-actions";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Log in · Yah Lah" };
@@ -16,7 +17,10 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   const problem = singpassProblem((await searchParams).problem);
   return (
     <main className="page">
-      <h1>Log in</h1>
+      <h1>
+        <Emoji char="🔐" />
+        Log in
+      </h1>
       {problem && (
         <p className="problem" role="alert">
           <CircleAlert aria-hidden="true" size={18} /> {problem}

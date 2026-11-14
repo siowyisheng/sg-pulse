@@ -6,6 +6,7 @@ import { Card } from "@/ui/card";
 import { PublishedFeelingBody } from "@/ui/published-feeling";
 import { formatCycle } from "@/web/format";
 import { POLARITY_LABEL, polarityFrom } from "@/web/polarity";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export default async function SharedFeeling({ params }: Props) {
       </Card>
       <p className="actions">
         <a className="button button-secondary" href="/">
+          <Emoji char="🇸🇬" />
           See how Singapore is feeling today
         </a>
       </p>

@@ -4,6 +4,7 @@ import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { currentMe } from "@/web/session";
 import { deleteAccountAction } from "../actions";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Delete my account · Yah Lah", robots: { index: false } };
@@ -15,7 +16,10 @@ export default async function DeleteAccount() {
   const winners = (await me.myFeelings()).filter((feeling) => feeling.state === "winner");
   return (
     <main className="page">
-      <h1>Delete my account</h1>
+      <h1>
+        <Emoji char="🗑️" />
+        Delete my account
+      </h1>
       <Card className="stack">
         <h2>What goes</h2>
         <p>Your initials, sex, date of birth and Singpass ID, your Upvotes, and every Feeling of yours that has not been a Feeling of the Day. Nothing is kept to bring them back.</p>

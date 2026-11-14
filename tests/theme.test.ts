@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { contrastFailures, rawStyleValuesInProject } from "@/theme/checks";
-import { colors } from "@/theme/tokens";
+import { contrastFailures, designContrastFailures, rawStyleValuesInProject } from "@/theme/checks";
+import { colors, designs } from "@/theme/tokens";
 import { PolarityBadge } from "@/ui/badges";
 
 describe("the app looks the way the style guide says", () => {
@@ -13,6 +13,10 @@ describe("the app looks the way the style guide says", () => {
 
   it("keeps every text and background pair the components use readable, in light and dark mode", () => {
     expect(contrastFailures()).toEqual([]);
+  });
+
+  it("keeps them readable in every Design too", () => {
+    expect(designContrastFailures()).toEqual([]);
   });
 
   it("shows Polarity with an icon and a label, never by colour alone", () => {
@@ -26,7 +30,8 @@ describe("the app looks the way the style guide says", () => {
   it("uses exactly the style guide's colours: each one in the guide is a token, and each token is in the guide", () => {
     const guide = readFileSync("docs/style-guide.md", "utf8");
     const inGuide = new Set((guide.match(/#[0-9A-Fa-f]{6}\b/g) ?? []).map((hex) => hex.toUpperCase()));
-    const inTokens = new Set([...Object.values(colors.light), ...Object.values(colors.dark)].map((hex) => hex.toUpperCase()));
+    const palettes = [colors, ...Object.values(designs)].flatMap((palette) => [palette.light, palette.dark]);
+    const inTokens = new Set(palettes.flatMap((palette) => Object.values(palette)).map((hex) => hex.toUpperCase()));
     expect([...inGuide].filter((hex) => !inTokens.has(hex))).toEqual([]);
     expect([...inTokens].filter((hex) => !inGuide.has(hex))).toEqual([]);
   });

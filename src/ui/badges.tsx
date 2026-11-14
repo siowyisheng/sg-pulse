@@ -1,6 +1,7 @@
 import { Check, Clock, Frown, Hourglass, Repeat, Smile, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Polarity } from "@/core/feeling-rules";
+import { Emoji, POLARITY_EMOJI } from "./emoji";
 
 const POLARITY = {
   good: { label: "Good", Icon: Smile },
@@ -11,8 +12,9 @@ const POLARITY = {
 export function PolarityBadge({ polarity }: { polarity: Polarity }) {
   const { label, Icon } = POLARITY[polarity];
   return (
-    <span className={`badge badge-${polarity}`}>
+    <span className={`badge badge-${polarity} has-emoji`}>
       <Icon aria-hidden="true" size={14} />
+      <Emoji char={POLARITY_EMOJI[polarity]} />
       {label}
     </span>
   );
@@ -26,8 +28,9 @@ export function BylineChip({ children }: { children: ReactNode }) {
 /** Marks a Seed Feeling, which has no Byline. */
 export function FromTheTeamChip() {
   return (
-    <span className="chip chip-byline">
+    <span className="chip chip-byline has-emoji">
       <Users aria-hidden="true" size={14} />
+      <Emoji char="👋" />
       From the team
     </span>
   );
@@ -36,8 +39,9 @@ export function FromTheTeamChip() {
 /** On a Submitter's own Feeling sent in after 21:00. */
 export function QueuedForTomorrowChip() {
   return (
-    <span className="chip chip-neutral">
+    <span className="chip chip-neutral has-emoji">
       <Clock aria-hidden="true" size={14} />
+      <Emoji char="⏳" />
       Queued for tomorrow
     </span>
   );
@@ -46,8 +50,9 @@ export function QueuedForTomorrowChip() {
 /** Marks a Carry-over. */
 export function StillFeelingItChip() {
   return (
-    <span className="chip chip-neutral">
+    <span className="chip chip-neutral has-emoji">
       <Repeat aria-hidden="true" size={14} />
+      <Emoji char="🔁" />
       Still feeling it
     </span>
   );
@@ -56,23 +61,30 @@ export function StillFeelingItChip() {
 /** Something waiting on the Admin: by default, a Submitter's own Feeling while a Report on it is open. */
 export function UnderReviewChip({ label = "Under review" }: { label?: string }) {
   return (
-    <span className="chip chip-warning">
+    <span className="chip chip-warning has-emoji">
       <Hourglass aria-hidden="true" size={14} />
+      <Emoji char="🔍" />
       {label}
     </span>
   );
 }
 
 /** Where something stands, in plain words: "Candidate today", "Expired". */
-export function StateChip({ children }: { children: ReactNode }) {
-  return <span className="chip chip-neutral">{children}</span>;
+export function StateChip({ children, emoji }: { children: ReactNode; emoji?: string }) {
+  return (
+    <span className="chip chip-neutral">
+      <Emoji char={emoji} />
+      {children}
+    </span>
+  );
 }
 
 /** Marks the Candidate holding the User's Upvote: clear, but quiet. */
 export function YourYahLahChip() {
   return (
-    <span className="chip chip-byline">
+    <span className="chip chip-byline has-emoji">
       <Check aria-hidden="true" size={14} />
+      <Emoji char="🙌" />
       Your Yah Lah
     </span>
   );

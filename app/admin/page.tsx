@@ -1,7 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { FRONT_PAGE_LOOKS, type ApprovalChoice } from "@/core/app";
+import { DESIGNS, FRONT_PAGE_LOOKS, type ApprovalChoice } from "@/core/app";
 import { bylineText } from "@/core/byline";
 import { nextCycle } from "@/core/cycle";
 import type { Polarity } from "@/core/feeling-rules";
@@ -9,11 +9,13 @@ import { getApp } from "@/composition";
 import { BylineChip, FromTheTeamChip, PolarityBadge, StateChip, UnderReviewChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
+import { DESIGN_DESCRIPTIONS } from "@/ui/design-descriptions";
+import { Emoji } from "@/ui/emoji";
 import { LOOK_DESCRIPTIONS } from "@/ui/front-page-looks";
 import { formatCycle, formatMoment, yahLahs } from "@/web/format";
 import { POLARITY_LABEL } from "@/web/polarity";
 import { currentMe } from "@/web/session";
-import { approveAction, clearReportAction, setFrontPageLookAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
+import { approveAction, clearReportAction, setDesignAction, setFrontPageLookAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
 import { NoticeForm } from "./notice-form";
 import { SeedForm } from "./seed-form";
 
@@ -64,7 +66,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const showing = [live.good, live.bad].filter((feeling) => feeling !== null);
   const missed = (await searchParams).problem === "NOT_A_CHOICE";
   const today = (await getApp()).currentCycle();
-  const [scheduled, look] = await Promise.all([me.asAdmin().scheduledSeedFeelings(), (await getApp()).frontPageLook()]);
+  const [scheduled, look, design] = await Promise.all([me.asAdmin().scheduledSeedFeelings(), (await getApp()).frontPageLook(), (await getApp()).design()]);
   return (
     <main className="page">
       <h1>Admin</h1>
@@ -167,8 +169,37 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <SeedForm firstCycle={today} defaultCycle={nextCycle(today)} />
       </Card>
       <section className="stack">
+        <h2>Design</h2>
+        <p className="muted">
+          The look of every screen Visitors and Users see: colours, type, shapes and emojis. The screens and words stay the same. Preview a Design to browse the whole site in it
+          (only you see it), then switch everyone at once; you can switch back at any time.
+        </p>
+        {DESIGNS.map((option) => (
+          <Card key={option} className="stack wide">
+            <h3 className="feeling-meta">
+              <Emoji char={DESIGN_DESCRIPTIONS[option].emoji} />
+              {DESIGN_DESCRIPTIONS[option].name}
+              {option === design && <StateChip>Showing now</StateChip>}
+            </h3>
+            <p className="muted">{DESIGN_DESCRIPTIONS[option].description}</p>
+            <div className="actions">
+              <a className="button button-ghost" href={option === design ? "/design-preview?stop" : `/design-preview?design=${option}`}>
+                {option === design ? "See it" : "Preview"}
+              </a>
+              {option !== design && (
+                <form action={setDesignAction.bind(null, option)}>
+                  <Button variant="secondary" type="submit">
+                    Use this Design
+                  </Button>
+                </form>
+              )}
+            </div>
+          </Card>
+        ))}
+      </section>
+      <section className="stack">
         <h2>Front page look</h2>
-        <p className="muted">How the first screen of the front page is laid out, for everyone. Preview a look before you switch; switching is immediate and you can switch back at any time.</p>
+        <p className="muted">How the first screen of the front page is laid out, for everyone, in the Classic Design (the others bring their own). Preview a look before you switch; switching is immediate and you can switch back at any time.</p>
         {FRONT_PAGE_LOOKS.map((option) => (
           <Card key={option} className="stack wide">
             <h3 className="feeling-meta">

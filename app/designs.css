@@ -1,0 +1,565 @@
+/*
+ * The Designs (src/core/design.ts). Classic is globals.css alone; every other Design sets
+ * data-design on <html>, which swaps the colour tokens (src/theme/tokens.ts) and adds what is here.
+ * Patterns and ornaments use the decor colours only, and never sit under text.
+ */
+
+/* Emojis: drawn from data-emoji, so they are never part of the text. Hidden in Classic. */
+
+.emoji {
+  display: none;
+}
+
+.emoji::before {
+  content: attr(data-emoji);
+}
+
+html[data-design] .emoji {
+  display: inline-block;
+  margin-right: 0.3em;
+  font-style: normal;
+}
+
+/* Where an emoji stands in for an icon, the icon steps aside. */
+html[data-design] .has-emoji > svg {
+  display: none;
+}
+
+html[data-design] .mood-emoji {
+  margin: 0;
+  font-size: var(--type-emoji-size);
+  line-height: var(--type-emoji-line);
+}
+
+html[data-design] .write-button .emoji {
+  margin: 0;
+  font-size: var(--type-h2-size);
+  line-height: var(--type-h2-line);
+}
+
+/* What every Design shares: display type in the header, a signature strip under it. */
+
+html[data-design] .wordmark {
+  font-family: var(--font-display);
+}
+
+html[data-design] .site-header {
+  position: relative;
+}
+
+html[data-design] .site-header::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * var(--space-sm));
+  left: 0;
+  z-index: 1;
+  height: var(--space-sm);
+  pointer-events: none;
+}
+
+html[data-design] .preview-banner a {
+  color: inherit;
+  font-weight: var(--type-body-bold-weight);
+}
+
+html[data-design] .page-title,
+html[data-design] .page h1 {
+  font-family: var(--font-display);
+}
+
+html[data-design] .mood {
+  gap: var(--space-xs);
+}
+
+/* Text never sits on a pattern: what stands on the patterned table gets a plain backing. */
+html[data-design] .look-postcards .first-screen > .feeling-meta,
+html[data-design] .look-postcards .scroll-hint,
+html[data-design] .look-postcards #voting-title {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-button);
+  background: var(--color-background);
+}
+
+html[data-design] .look-postcards .scroll-hint {
+  padding: var(--space-xs) var(--space-md);
+}
+
+html[data-design] .cloud-word .emoji {
+  margin-right: 0.15em;
+}
+
+/* ───────────────────────── Kopitiam ☕ ───────────────────────── */
+
+html[data-design="kopitiam"] .site-header::after {
+  /* Green and white floor tiles. */
+  background: repeating-linear-gradient(90deg, var(--color-decor-b) 0 var(--space-sm), var(--color-surface) var(--space-sm) var(--space-md));
+}
+
+html[data-design="kopitiam"] .look-postcards {
+  background-color: var(--color-background);
+  background-image: conic-gradient(var(--color-decor-a) 25%, transparent 0 50%, var(--color-decor-a) 0 75%, transparent 0);
+  background-size: var(--space-xxl) var(--space-xxl);
+}
+
+/* Each Feeling is a cup on the table: upright, with an enamel rim and a saucer's shadow. */
+html[data-design="kopitiam"] .postcard,
+html[data-design="kopitiam"] .postcard-bad {
+  transform: none;
+  border: 3px solid var(--color-decor-b);
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-modal) var(--radius-modal);
+  box-shadow: 0 var(--space-sm) 0 calc(-1 * var(--space-xs)) var(--color-decor-a), var(--shadow-card);
+}
+
+html[data-design="kopitiam"] .postcard-band {
+  border-bottom: 3px solid var(--color-decor-c);
+}
+
+html[data-design="kopitiam"] .feeling-text,
+html[data-design="kopitiam"] .candidate-text {
+  font-family: var(--font-display);
+}
+
+html[data-design="kopitiam"] .mood {
+  border-width: 3px;
+  border-radius: var(--radius-modal) var(--radius-modal) 40% 40% / var(--radius-modal) var(--radius-modal) 18% 18%;
+}
+
+html[data-design="kopitiam"] .card {
+  border: 2px solid var(--color-primary-tint);
+}
+
+html[data-design="kopitiam"] .button-yah-lah {
+  box-shadow: 0 var(--space-xs) 0 var(--color-accent-hover);
+}
+
+/* ───────────────────────── Hawker signboard 🍜 ───────────────────────── */
+
+html[data-design="hawker"] .site-header::after {
+  /* The awning. */
+  height: var(--space-md);
+  bottom: calc(-1 * var(--space-md));
+  background: repeating-linear-gradient(90deg, var(--color-decor-b) 0 var(--space-lg), var(--color-decor-a) var(--space-lg) var(--space-xxl));
+  border-radius: 0 0 var(--space-sm) var(--space-sm);
+}
+
+html[data-design="hawker"] .first-screen,
+html[data-design="hawker"] .page {
+  padding-top: var(--space-xl);
+}
+
+html[data-design="hawker"] .look-postcards {
+  background-image: none;
+}
+
+html[data-design="hawker"] h1,
+html[data-design="hawker"] h2,
+html[data-design="hawker"] .wordmark,
+html[data-design="hawker"] .feeling-title,
+html[data-design="hawker"] .mood {
+  font-family: var(--font-display);
+  font-weight: var(--type-body-weight);
+  letter-spacing: var(--type-badge-tracking);
+  text-transform: uppercase;
+}
+
+/* Anton has one weight: never ask the browser to fake a bolder one. */
+html[data-design="hawker"] .feeling-text,
+html[data-design="hawker"] .cloud-word,
+html[data-design="hawker"] .page-title {
+  font-weight: var(--type-body-weight);
+}
+
+html[data-design="hawker"] .mood {
+  font-size: var(--type-hero-size);
+  line-height: var(--type-hero-line);
+}
+
+/* Signboards: straight, heavy-edged, with a hard shadow like a board on a wall. */
+html[data-design="hawker"] .postcard,
+html[data-design="hawker"] .postcard-bad {
+  transform: none;
+  border: 3px solid var(--color-ink);
+  box-shadow: var(--space-xs) var(--space-xs) 0 var(--color-ink);
+}
+
+html[data-design="hawker"] .postcard-band {
+  border-bottom: 3px solid var(--color-ink);
+}
+
+html[data-design="hawker"] .postcard-band .feeling-title {
+  font-size: var(--type-h3-size);
+  line-height: var(--type-h3-line);
+}
+
+html[data-design="hawker"] .card,
+html[data-design="hawker"] .mood {
+  border: 3px solid var(--color-ink);
+  box-shadow: var(--space-xs) var(--space-xs) 0 var(--color-ink);
+}
+
+html[data-design="hawker"] .button-yah-lah,
+html[data-design="hawker"] .button-secondary {
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--space-xs) var(--space-xs) 0 var(--color-ink);
+}
+
+html[data-design="hawker"] .button-large {
+  font-family: var(--font-display);
+  font-weight: var(--type-body-weight);
+  text-transform: uppercase;
+}
+
+html[data-design="hawker"] .badge {
+  border-width: 2px;
+}
+
+/* ───────────────────────── Pasar malam 🏮 ───────────────────────── */
+
+html[data-design="pasar-malam"] {
+  color-scheme: dark;
+}
+
+html[data-design="pasar-malam"] .site-header::after {
+  /* A string of lights. */
+  height: var(--space-md);
+  bottom: calc(-1 * var(--space-md));
+  background-image:
+    radial-gradient(circle, var(--color-decor-a) 3px, transparent 4px), radial-gradient(circle, var(--color-decor-b) 3px, transparent 4px),
+    radial-gradient(circle, var(--color-decor-c) 3px, transparent 4px);
+  background-position: 0 0, var(--space-lg) 0, var(--space-xxl) 0;
+  background-size: 72px var(--space-md);
+  background-repeat: repeat-x;
+}
+
+html[data-design="pasar-malam"] h1,
+html[data-design="pasar-malam"] .page-title,
+html[data-design="pasar-malam"] .mood span:last-child {
+  text-shadow: 0 0 var(--space-md) var(--color-decor-b);
+}
+
+/* Righteous has one weight. */
+html[data-design="pasar-malam"] h1,
+html[data-design="pasar-malam"] h2,
+html[data-design="pasar-malam"] .feeling-text,
+html[data-design="pasar-malam"] .cloud-word,
+html[data-design="pasar-malam"] .mood,
+html[data-design="pasar-malam"] .wordmark {
+  font-weight: var(--type-body-weight);
+}
+
+html[data-design="pasar-malam"] .button-secondary {
+  border: 1.5px solid var(--color-primary-text);
+}
+
+html[data-design="pasar-malam"] .sunrise-heading {
+  padding-top: var(--space-lg);
+}
+
+/* Two booths, lit from the corner, with bulbs round the edge. */
+html[data-design="pasar-malam"] .sunrise-field {
+  margin: 0 var(--space-md) var(--space-md);
+  border: 2px dashed var(--color-decor-a);
+  border-radius: var(--radius-card);
+}
+
+html[data-design="pasar-malam"] .sunrise-bad {
+  border-color: var(--color-decor-c);
+}
+
+html[data-design="pasar-malam"] .sunrise-face {
+  opacity: 0.6;
+}
+
+html[data-design="pasar-malam"] .mood {
+  border: 2px dashed;
+  box-shadow: 0 0 var(--space-lg) var(--color-good-highlight);
+}
+
+html[data-design="pasar-malam"] .mood-bad {
+  box-shadow: 0 0 var(--space-lg) var(--color-bad-highlight);
+}
+
+html[data-design="pasar-malam"] .card {
+  border: 1.5px solid var(--color-primary-tint);
+}
+
+html[data-design="pasar-malam"] .button-yah-lah {
+  box-shadow: 0 0 var(--space-lg) var(--color-accent);
+}
+
+/* ───────────────────────── Peranakan tiles 🌺 ───────────────────────── */
+
+html[data-design="peranakan"] .site-header::after {
+  height: var(--space-md);
+  bottom: calc(-1 * var(--space-md));
+  background-color: var(--color-decor-a);
+  background-image: radial-gradient(circle at 50% 50%, var(--color-decor-b) 0 4px, transparent 5px), radial-gradient(circle at 0 0, var(--color-decor-c) 0 6px, transparent 7px),
+    radial-gradient(circle at 100% 100%, var(--color-decor-c) 0 6px, transparent 7px);
+  background-size: var(--space-md) var(--space-md);
+}
+
+html[data-design="peranakan"] .first-screen,
+html[data-design="peranakan"] .page {
+  padding-top: var(--space-xl);
+}
+
+html[data-design="peranakan"] .look-postcards {
+  background-image: radial-gradient(circle at 50% 50%, var(--color-decor-b) 0 3px, transparent 4px), radial-gradient(circle at 0 0, var(--color-decor-a) 0 10px, transparent 11px),
+    radial-gradient(circle at 100% 0, var(--color-decor-a) 0 10px, transparent 11px), radial-gradient(circle at 0 100%, var(--color-decor-a) 0 10px, transparent 11px),
+    radial-gradient(circle at 100% 100%, var(--color-decor-a) 0 10px, transparent 11px);
+  background-size: var(--space-xxl) var(--space-xxl);
+}
+
+html[data-design="peranakan"] h1,
+html[data-design="peranakan"] h2,
+html[data-design="peranakan"] .feeling-text,
+html[data-design="peranakan"] .mood {
+  font-weight: var(--type-body-weight);
+}
+
+html[data-design="peranakan"] .feeling-text {
+  font-family: var(--font-display);
+}
+
+/* A tile: a cobalt frame with a corner flower in each corner. */
+html[data-design="peranakan"] .postcard,
+html[data-design="peranakan"] .postcard-bad,
+html[data-design="peranakan"] .card,
+html[data-design="peranakan"] .mood {
+  position: relative;
+  border: 3px double var(--color-decor-c);
+}
+
+html[data-design="peranakan"] .postcard,
+html[data-design="peranakan"] .postcard-bad {
+  transform: none;
+}
+
+html[data-design="peranakan"] .postcard::before,
+html[data-design="peranakan"] .card::before,
+html[data-design="peranakan"] .mood::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 0 0, var(--color-decor-b) 0 var(--space-sm), transparent 9px), radial-gradient(circle at 100% 0, var(--color-decor-b) 0 var(--space-sm), transparent 9px),
+    radial-gradient(circle at 0 100%, var(--color-decor-b) 0 var(--space-sm), transparent 9px), radial-gradient(circle at 100% 100%, var(--color-decor-b) 0 var(--space-sm), transparent 9px);
+}
+
+/* ───────────────────────── MRT 🚇 ───────────────────────── */
+
+html[data-design="mrt"] .site-header::after {
+  /* The network's line colours. */
+  background: linear-gradient(
+    90deg,
+    var(--color-good-fill) 0 16.6%,
+    var(--color-accent) 0 33.3%,
+    var(--color-bad-fill) 0 50%,
+    var(--color-decor-a) 0 66.6%,
+    var(--color-decor-b) 0 83.3%,
+    var(--color-decor-c) 0
+  );
+}
+
+html[data-design="mrt"] h1,
+html[data-design="mrt"] h2,
+html[data-design="mrt"] .mood,
+html[data-design="mrt"] .feeling-text {
+  font-weight: var(--type-h1-weight);
+  letter-spacing: var(--type-h2-tracking);
+}
+
+/* The two Feelings are stations on one line, Good above and Bad below. */
+html[data-design="mrt"] .look-highlighter .first-screen {
+  gap: 0;
+}
+
+html[data-design="mrt"] .highlighter-heading {
+  margin-bottom: var(--space-md);
+  border-bottom: 0;
+}
+
+html[data-design="mrt"] .marker {
+  position: relative;
+  padding: var(--space-md) 0 var(--space-md) var(--space-xxl);
+}
+
+html[data-design="mrt"] .marker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 14px;
+  width: var(--space-sm);
+  background: var(--color-good-fill);
+}
+
+html[data-design="mrt"] .marker-good::before {
+  top: 50%;
+  border-radius: var(--space-xs) var(--space-xs) 0 0;
+}
+
+html[data-design="mrt"] .marker-bad::before {
+  bottom: 50%;
+  border-radius: 0 0 var(--space-xs) var(--space-xs);
+  background: var(--color-bad-fill);
+}
+
+html[data-design="mrt"] .marker::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 14px);
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border: 6px solid var(--color-good-fill);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+}
+
+html[data-design="mrt"] .marker-bad::after {
+  border-color: var(--color-bad-fill);
+}
+
+html[data-design="mrt"] .marker .feeling-text-line {
+  background: none;
+}
+
+/* The moods are platform signs. */
+html[data-design="mrt"] .mood {
+  border: 0;
+  border-left: var(--space-md) solid;
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+  color: var(--color-on-solid);
+}
+
+html[data-design="mrt"] .mood-good {
+  border-left-color: var(--color-good-fill);
+}
+
+html[data-design="mrt"] .mood-bad {
+  border-left-color: var(--color-bad-fill);
+}
+
+html[data-design="mrt"] .card {
+  border-left: 6px solid var(--color-decor-b);
+}
+
+html[data-design="mrt"] .cloud-word::after {
+  content: "";
+  width: var(--space-sm);
+  height: var(--space-sm);
+  margin-left: var(--space-xs);
+  border: 2px solid;
+  border-radius: var(--radius-pill);
+}
+
+/* ───────────────────────── Void deck 🏢 ───────────────────────── */
+
+html[data-design="void-deck"] .site-header::after {
+  /* Block paint, a band of each. */
+  background: linear-gradient(90deg, var(--color-decor-a) 0 33.3%, var(--color-decor-b) 0 66.6%, var(--color-decor-c) 0);
+}
+
+/* A terrazzo floor round the two blocks. */
+html[data-design="void-deck"] .look-sunrise .first-screen {
+  padding: var(--space-md) 0;
+  background-image: radial-gradient(circle at 20% 30%, var(--color-decor-a) 0 3px, transparent 4px), radial-gradient(circle at 70% 60%, var(--color-decor-b) 0 2px, transparent 3px),
+    radial-gradient(circle at 40% 80%, var(--color-decor-c) 0 4px, transparent 5px), radial-gradient(circle at 85% 15%, var(--color-line) 0 2px, transparent 3px);
+  background-size: 52px 52px;
+}
+
+html[data-design="void-deck"] .sunrise-heading {
+  margin: 0 var(--space-md) var(--space-md);
+  width: auto;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-button);
+  background: var(--color-background);
+}
+
+html[data-design="void-deck"] .sunrise-field {
+  margin: 0 var(--space-md) var(--space-md);
+  border-radius: var(--radius-card);
+  box-shadow: 0 var(--space-sm) 0 var(--color-good-fill);
+}
+
+html[data-design="void-deck"] .sunrise-bad {
+  box-shadow: 0 var(--space-sm) 0 var(--color-bad-fill);
+}
+
+html[data-design="void-deck"] .look-sunrise .scroll-hint {
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+}
+
+html[data-design="void-deck"] .mood {
+  border-width: 0 0 var(--space-sm);
+}
+
+html[data-design="void-deck"] .mood-good {
+  border-bottom-color: var(--color-good-fill);
+}
+
+html[data-design="void-deck"] .mood-bad {
+  border-bottom-color: var(--color-bad-fill);
+}
+
+html[data-design="void-deck"] .card {
+  border-bottom: var(--space-xs) solid var(--color-decor-b);
+}
+
+html[data-design="void-deck"] h1,
+html[data-design="void-deck"] .feeling-text {
+  font-weight: var(--type-h1-weight);
+}
+
+/* ───────────────────────── Garden City 🌿 ───────────────────────── */
+
+html[data-design="garden-city"] .site-header::after {
+  /* A hedge. */
+  height: var(--space-md);
+  bottom: calc(-1 * var(--space-md));
+  background: radial-gradient(ellipse at 50% 0, var(--color-decor-a) 0 9px, transparent 10px);
+  background-size: var(--space-lg) var(--space-md);
+}
+
+html[data-design="garden-city"] .first-screen,
+html[data-design="garden-city"] .page {
+  padding-top: var(--space-xl);
+}
+
+html[data-design="garden-city"] .highlighter-heading {
+  border-bottom: 0;
+}
+
+/* Each Feeling sits on a leaf. */
+html[data-design="garden-city"] .marker {
+  padding: var(--space-lg);
+  border-radius: var(--radius-card);
+  background: var(--color-good-tint);
+}
+
+html[data-design="garden-city"] .marker-bad {
+  border-radius: 8px 28px 28px 28px;
+  background: var(--color-bad-tint);
+}
+
+html[data-design="garden-city"] .mood-good {
+  border-radius: 80px var(--space-sm) 80px var(--space-sm);
+}
+
+html[data-design="garden-city"] .mood-bad {
+  border-radius: var(--space-sm) 80px var(--space-sm) 80px;
+}
+
+html[data-design="garden-city"] .card {
+  border: 2px solid var(--color-primary-tint);
+}
+
+html[data-design="garden-city"] .feeling-text,
+html[data-design="garden-city"] .candidate-text {
+  font-family: var(--font-display);
+  font-weight: var(--type-h3-weight);
+}

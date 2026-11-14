@@ -5,6 +5,7 @@ import { PolarityBadge } from "@/ui/badges";
 import { Card } from "@/ui/card";
 import { PublishedFeelingBody } from "@/ui/published-feeling";
 import { formatCycle } from "@/web/format";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Earlier days · Yah Lah" };
@@ -19,7 +20,10 @@ export default async function Archive({ searchParams }: { searchParams: Promise<
       <a className="back-link" href="/">
         <ChevronLeft aria-hidden="true" size={20} /> Today
       </a>
-      <h1 className="page-title">Earlier days</h1>
+      <h1 className="page-title">
+        <Emoji char="📅" />
+        Earlier days
+      </h1>
       {entries.length === 0 && <p className="muted">{before ? "Nothing earlier than this." : "Nothing yet. Come back tomorrow."}</p>}
       {days.map((day) => (
         <section key={day} className="stack wide" aria-label={formatCycle(day)}>

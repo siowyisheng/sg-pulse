@@ -93,8 +93,12 @@ _Avoid_: Delete, ban
 **Removal request**:
 A User's ask that a Feeling of theirs that has been a Feeling of the Day be removed, archive entry included. The Admin honours it within 24 hours, by a Take-down. Deleting an account does not make one; a User can ask for it in the same go.
 
+**Design**:
+The look of every screen a Visitor or User sees (colours, type, shapes and emojis): Classic, Kopitiam, Hawker signboard, Pasar malam, Peranakan tiles, MRT, Void deck or Garden City. Chosen by an Admin for everyone, who can preview one first; the screens, words and journeys are the same in each.
+_Avoid_: Theme, skin
+
 **Front page look**:
-How the first screen of the front page is laid out (Original, Sunrise and dusk, Highlighter, Postcards). Chosen by an Admin for everyone; the Feelings shown are the same whichever it is.
+How the first screen of the front page is laid out in the Classic Design (Original, Sunrise and dusk, Highlighter, Postcards). Chosen by an Admin for everyone; the Feelings shown are the same whichever it is. The other Designs bring their own first screen.
 _Avoid_: Theme, skin, layout
 
 **Feedback**:

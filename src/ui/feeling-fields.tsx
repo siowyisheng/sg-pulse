@@ -3,6 +3,7 @@
 import { Frown, Smile } from "lucide-react";
 import { useState } from "react";
 import { MAX_HASHTAG_CHARACTERS, MAX_TEXT_CHARACTERS } from "@/core/feeling-rules";
+import { Emoji, POLARITY_EMOJI } from "./emoji";
 
 /** Characters as a person counts them, so an emoji is one. */
 const characters = (text: string) => [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].length;
@@ -30,14 +31,16 @@ export function FeelingFields({ hashtagsInUse = [] }: { hashtagsInUse?: string[]
         <legend>Is it Good or Bad?</legend>
         <label className="toggle-option toggle-good">
           <input type="radio" name="polarity" value="good" required checked={polarity === "good"} onChange={() => setPolarity("good")} />
-          <span>
-            <Smile aria-hidden="true" size={20} /> Good
+          <span className="has-emoji">
+            <Smile aria-hidden="true" size={20} />
+            <Emoji char={POLARITY_EMOJI.good} /> Good
           </span>
         </label>
         <label className="toggle-option toggle-bad">
           <input type="radio" name="polarity" value="bad" required checked={polarity === "bad"} onChange={() => setPolarity("bad")} />
-          <span>
-            <Frown aria-hidden="true" size={20} /> Bad
+          <span className="has-emoji">
+            <Frown aria-hidden="true" size={20} />
+            <Emoji char={POLARITY_EMOJI.bad} /> Bad
           </span>
         </label>
       </fieldset>

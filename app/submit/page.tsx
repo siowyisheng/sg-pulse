@@ -6,6 +6,7 @@ import { Card } from "@/ui/card";
 import { ConsentReminder } from "@/ui/consent-reminder";
 import { currentMe } from "@/web/session";
 import { SubmitForm } from "./submit-form";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Write a Feeling · Yah Lah" };
@@ -16,7 +17,10 @@ export default async function Submit() {
   const [submission, hashtagsInUse] = await Promise.all([me.submission(), (await getApp()).hashtagsInUse()]);
   return (
     <main className="page">
-      <h1>Write a Feeling</h1>
+      <h1>
+        <Emoji char="✍️" />
+        Write a Feeling
+      </h1>
       {submission.canSubmit ? (
         <Card className="stack">
           {submission.queued && (

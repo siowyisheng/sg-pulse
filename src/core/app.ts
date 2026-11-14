@@ -5,6 +5,7 @@ import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
 import { createFeedback, type FeedbackInput } from "./feedback";
+import { createDesign, type Design } from "./design";
 import { createFrontPageLook, type FrontPageLook } from "./front-page-look";
 import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
@@ -18,6 +19,7 @@ export type { Session };
 export type { AuditEntry, ReportedFeeling } from "./moderation";
 export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFeeling, SharePreview, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 export { FRONT_PAGE_LOOKS, isFrontPageLook, type FrontPageLook } from "./front-page-look";
+export { DESIGNS, isDesign, type Design } from "./design";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -47,6 +49,8 @@ export interface Admin {
   auditLog(): Promise<AuditEntry[]>;
   /** Switches the Front page look for everyone, at once. Refused for a look that doesn't exist. */
   setFrontPageLook(look: string): Promise<void>;
+  /** Switches the Design of every front-facing screen for everyone, at once. Refused for a Design that doesn't exist. */
+  setDesign(design: string): Promise<void>;
 }
 
 export interface AppDeps {
@@ -116,6 +120,7 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
   const moderation = createModeration({ db, clock });
   const privacy = createPrivacy({ db, clock });
   const frontPageLook = createFrontPageLook({ db, clock });
+  const design = createDesign({ db, clock });
   const feedback = createFeedback({ db, clock, mailer, to: feedbackTo, record: moderation.record });
 
   /** Forgets a browser the push service says is gone. */
@@ -150,6 +155,10 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
     async setFrontPageLook(look) {
       const chosen = await frontPageLook.set(look);
       await moderation.record(adminId, "front-page-look", null, chosen);
+    },
+    async setDesign(name) {
+      const chosen = await design.set(name);
+      await moderation.record(adminId, "design", null, chosen);
     },
   });
 
@@ -250,6 +259,9 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
 
     /** How the front page's first screen is laid out, as an Admin last chose. Open to any Visitor. */
     frontPageLook: (): Promise<FrontPageLook> => frontPageLook.current(),
+
+    /** The Design every front-facing screen is in, as an Admin last chose. Open to any Visitor. */
+    design: (): Promise<Design> => design.current(),
 
     /** Past Feelings of the Day, newest day first, a page of days at a time. Open to any Visitor. */
     archive: (page?: { before?: string; days?: number }): Promise<PublishedFeeling[]> => feelings.archive(page),

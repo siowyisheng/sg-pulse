@@ -5,6 +5,7 @@ import { getApp } from "@/composition";
 import { PolarityBadge } from "@/ui/badges";
 import { Card } from "@/ui/card";
 import { POLARITY_LABEL, polarityFrom } from "@/web/polarity";
+import { HashtagLabel } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function WordCloud({ params }: Props) {
               {cloud.map((word) => (
                 <li key={word.hashtag}>
                   <a className={`cloud-word cloud-${word.size} hashtag-${polarity}`} href={`/feelings/${polarity}/${encodeURIComponent(word.hashtag)}`}>
-                    #{word.hashtag}
+                    <HashtagLabel hashtag={word.hashtag} />
                   </a>
                 </li>
               ))}

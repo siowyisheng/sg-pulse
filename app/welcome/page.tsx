@@ -7,6 +7,7 @@ import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { singpassProblemOf, singpassProof } from "@/web/singpass";
 import { confirmConsentAction, declineConsentAction } from "../auth-actions";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Before you join · Yah Lah" };
@@ -25,9 +26,15 @@ export default async function Welcome() {
   }
   return (
     <main className="page">
-      <h1>Before you join</h1>
+      <h1>
+        <Emoji char="👋" />
+        Before you join
+      </h1>
       <Card className="stack">
-        <h2>What everyone will see</h2>
+        <h2>
+          <Emoji char="👀" />
+          What everyone will see
+        </h2>
         <p>Each Feeling you write is public, and shows this beside it:</p>
         <p>
           <BylineChip>{bylineText(byline)}</BylineChip>
@@ -52,7 +59,10 @@ export default async function Welcome() {
         </ul>
       </Card>
       <Card className="stack">
-        <h2>What we keep</h2>
+        <h2>
+          <Emoji char="🔒" />
+          What we keep
+        </h2>
         <p>
           Your initials, sex and date of birth (to work out your age band), and Singpass&apos;s ID for you, so one person has one say. We don&apos;t keep your name, and we
           never receive your NRIC. There are no usernames, and nobody can message you.

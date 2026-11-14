@@ -13,6 +13,7 @@ import { signOutAction } from "../auth-actions";
 import { becomeAdminInDemoAction } from "../demo/actions";
 import { undoUpvoteFromMyFeelingsAction } from "../feelings/actions";
 import { requestRemovalAction } from "./actions";
+import { Emoji, HashtagLabel } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "My Feelings · Yah Lah" };
@@ -22,15 +23,15 @@ function State({ feeling }: { feeling: MyFeeling }) {
     case "queued":
       return <QueuedForTomorrowChip />;
     case "candidate":
-      return <StateChip>Candidate today</StateChip>;
+      return <StateChip emoji="🗳️">Candidate today</StateChip>;
     case "winner":
-      return <StateChip>Feeling of the Day</StateChip>;
+      return <StateChip emoji="🏆">Feeling of the Day</StateChip>;
     case "under-review":
       return <UnderReviewChip />;
     case "removed":
-      return <StateChip>Removed by an Admin</StateChip>;
+      return <StateChip emoji="🚫">Removed by an Admin</StateChip>;
     case "expired":
-      return <StateChip>Expired</StateChip>;
+      return <StateChip emoji="💤">Expired</StateChip>;
   }
 }
 
@@ -41,7 +42,10 @@ export default async function MyFeelings() {
   const [feelings, submission, upvote] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote()]);
   return (
     <main className="page">
-      <h1>My Feelings</h1>
+      <h1>
+        <Emoji char="🙋" />
+        My Feelings
+      </h1>
       <p className="feeling-meta">
         Your Byline <BylineChip>{bylineText(me.byline)}</BylineChip>
       </p>
@@ -62,13 +66,16 @@ export default async function MyFeelings() {
           </span>
         </p>
       )}
-      <h2>My Yah Lah today</h2>
+      <h2>
+        <Emoji char="🙌" />
+        My Yah Lah today
+      </h2>
       {upvote ? (
         <Card className="stack">
           <p className="feeling-meta">
             <PolarityBadge polarity={upvote.polarity} />
             <a className={`hashtag hashtag-${upvote.polarity}`} href={`/feelings/${upvote.polarity}/${encodeURIComponent(upvote.hashtag)}`}>
-              #{upvote.hashtag}
+              <HashtagLabel hashtag={upvote.hashtag} />
             </a>
             <YourYahLahChip />
           </p>
@@ -84,7 +91,10 @@ export default async function MyFeelings() {
           You haven&apos;t said Yah Lah to a Feeling today. <a href="/#voting">Browse today&apos;s Feelings</a>
         </p>
       )}
-      <h2>Feelings I wrote</h2>
+      <h2>
+        <Emoji char="✍️" />
+        Feelings I wrote
+      </h2>
       {feelings.length === 0 && <p className="muted">You haven&apos;t written a Feeling yet.</p>}
       {feelings.map((feeling) => (
         <Card key={feeling.cycle} className="stack">
@@ -96,7 +106,9 @@ export default async function MyFeelings() {
             <State feeling={feeling} />
           </p>
           <p>{feeling.text}</p>
-          <p className={`hashtag hashtag-${feeling.polarity}`}>#{feeling.hashtag}</p>
+          <p className={`hashtag hashtag-${feeling.polarity}`}>
+            <HashtagLabel hashtag={feeling.hashtag} />
+          </p>
           {feeling.state === "winner" &&
             (feeling.removalRequested ? (
               <p className="caption muted">You&apos;ve asked for this to be removed. It will be, within 24 hours.</p>

@@ -10,6 +10,7 @@ import { LoginButton } from "@/ui/login-gate";
 import { Modal } from "@/ui/modal";
 import { startSingpassAction } from "../../../auth-actions";
 import { reportAction, takeDownCandidateAction, undoUpvoteAction, upvoteAction } from "../../actions";
+import { Emoji } from "@/ui/emoji";
 
 export type ShownCandidate = Candidate & { mine?: boolean; hasMyUpvote?: boolean };
 
@@ -114,6 +115,7 @@ export function CandidateList({
             ) : viewer === "user" ? (
               <>
                 <Button variant="yah-lah" className="button-large" onClick={() => yahLah(open.id)} disabled={busy}>
+                  <Emoji char="🙌" />
                   Yah Lah
                 </Button>
                 <p className="caption muted">

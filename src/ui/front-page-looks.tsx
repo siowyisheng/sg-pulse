@@ -7,6 +7,7 @@ import { formatCycle } from "@/web/format";
 import { AdSlot } from "./ad-slot";
 import { PolarityBadge } from "./badges";
 import { Card } from "./card";
+import { Emoji } from "./emoji";
 import { PublishedFeelingBody } from "./published-feeling";
 
 /**
@@ -42,6 +43,7 @@ function Heading({ today, className = "today" }: { today: FeelingsOfTheDay; clas
   return (
     <div className="feeling-meta spread">
       <h1 className={className}>
+        <Emoji char="🇸🇬" />
         How Singapore is feeling <time dateTime={today.cycle}>{formatCycle(today.cycle)}</time>
       </h1>
       <a className="today" href="/archive">
@@ -67,7 +69,10 @@ function Body({ feeling }: { feeling: FeelingOfTheDay | null }) {
 function ScrollHint() {
   return (
     <a className="scroll-hint" href="#voting">
-      <span>Pick tomorrow&apos;s Feelings</span>
+      <span>
+        <Emoji char="👇" />
+        Pick tomorrow&apos;s Feelings
+      </span>
       <ChevronDown aria-hidden="true" size={20} />
     </a>
   );
@@ -122,6 +127,7 @@ function Highlighter({ today, ad }: FirstScreenProps) {
     <main className={screenClass(today)}>
       <header className="highlighter-heading">
         <h1>
+          <Emoji char="🇸🇬" />
           <time dateTime={today.cycle}>{formatCycle(today.cycle)}</time>
         </h1>
         <p className="feeling-meta spread">

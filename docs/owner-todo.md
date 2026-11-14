@@ -13,9 +13,14 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 - [ ] Add tomorrow's Good and Bad Seed Feelings: `npm run seed -- 2026-11-14 good kopi "your text"`. Without them the front page says "Nothing here today." Write them yourself; copy nothing from Twitter/X or anywhere else.
   - The Admin area (`/admin`) does the same job with a form, once Singpass is connected and you have made yourself an Admin (see Singpass below).
 
+## Design
+
+- [ ] Choose a Design. Seven new ones are built beside Classic (what shows now): Kopitiam, Hawker signboard, Pasar malam, Peranakan tiles, MRT, Void deck and Garden City. In `/admin`, under "Design", press Preview on one: the whole site switches to it for you alone, with a bar at the top to stop. Browse the screens on your phone, then press "Use this Design" to switch everyone. No migration is needed beyond `0008` above. Locally, `npm run demo` and open `/design-preview?design=mrt` (or any other) to try one without signing in.
+- [ ] Check the Hashtag emojis (`src/ui/emoji.tsx`) read right to you: a Hashtag not in that list shows no emoji. Add or change any there.
+
 ## Front page look
 
-- [ ] Choose the front page look. Four are built: Original (what shows now), Sunrise and dusk, Highlighter and Postcards. In `/admin`, under "Front page look", press Preview on each to see it on your phone, then "Use this look". It switches for everyone at once and you can switch back any time. Without the `0008` migration above the front page fails, so run that first. Locally, `npm run demo` and open `/?look=sunrise` (or `highlighter`, `postcards`) to compare without signing in.
+- [ ] Only matters in the Classic Design. Choose the front page look. Four are built: Original (what shows now), Sunrise and dusk, Highlighter and Postcards. In `/admin`, under "Front page look", press Preview on each to see it on your phone, then "Use this look". It switches for everyone at once and you can switch back any time. Without the `0008` migration above the front page fails, so run that first. Locally, `npm run demo` and open `/?look=sunrise` (or `highlighter`, `postcards`) to compare without signing in.
 
 ## Housekeeping on GitHub
 

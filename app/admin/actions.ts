@@ -106,3 +106,15 @@ export async function setFrontPageLookAction(look: string): Promise<void> {
   revalidatePath("/admin");
   revalidatePath("/");
 }
+
+/** Switches the Design of every front-facing screen for everyone. */
+export async function setDesignAction(design: string): Promise<void> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return;
+  try {
+    await me.asAdmin().setDesign(design);
+  } catch (error) {
+    messageOf(error);
+  }
+  revalidatePath("/", "layout");
+}

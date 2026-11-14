@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { colors, pairs, type ColorPair, type Palette } from "./tokens";
+import { colors, designs, pairs, type ColorPair, type Palette } from "./tokens";
 
 /** What keeps the app from drifting off the style guide: run by the tests and before every build. */
 
@@ -98,6 +98,11 @@ export function contrastFailures(palettes: { light: Palette; dark: Palette } = c
       return [`${pair.use} (${mode}): ${pair.text} on ${pair.background} is ${ratio.toFixed(2)}:1, needs ${needed}:1`];
     }),
   );
+}
+
+/** The same check in every Design other than Classic, each failure naming its Design. */
+export function designContrastFailures(checked: ColorPair[] = pairs): string[] {
+  return Object.entries(designs).flatMap(([name, design]) => contrastFailures(design, checked).map((failure) => `${name} Design: ${failure}`));
 }
 
 const camel = (name: string) => name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());

@@ -6,6 +6,7 @@ import { yahLahs } from "@/web/format";
 import { sharePath } from "@/web/site";
 import { BylineChip, FromTheTeamChip, StillFeelingItChip } from "./badges";
 import { ShareButton } from "./share-button";
+import { HashtagLabel } from "./emoji";
 
 /**
  * The inside of a card for a Feeling that is or was a Feeling of the Day: its text, Hashtag, who
@@ -26,7 +27,9 @@ export function PublishedFeelingBody({ feeling, carriedOver = false, size = "reg
         </p>
       )}
       <p className="feeling-meta">
-        <span className={`hashtag hashtag-${feeling.polarity}`}>#{feeling.hashtag}</span>
+        <span className={`hashtag hashtag-${feeling.polarity}`}>
+          <HashtagLabel hashtag={feeling.hashtag} />
+        </span>
         {feeling.fromTheTeam && <FromTheTeamChip />}
         {feeling.byline && <BylineChip>{bylineText(feeling.byline)}</BylineChip>}
         {carriedOver && <StillFeelingItChip />}

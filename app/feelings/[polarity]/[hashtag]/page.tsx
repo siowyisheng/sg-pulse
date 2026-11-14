@@ -10,6 +10,7 @@ import { decoded, POLARITY_LABEL, polarityFrom } from "@/web/polarity";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
 import { CandidateList, type ShownCandidate } from "./candidate-list";
+import { HashtagLabel } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,9 @@ export default async function HashtagScreen({ params }: Props) {
         <ChevronLeft aria-hidden="true" size={20} /> {POLARITY_LABEL[polarity]} Hashtags
       </a>
       <h1 className="page-title">
-        <PolarityBadge polarity={polarity} /> <span className={`hashtag-${polarity}`}>#{hashtag.replace(/^#+/, "").toLowerCase()}</span>
+        <PolarityBadge polarity={polarity} /> <span className={`hashtag-${polarity}`}>
+          <HashtagLabel hashtag={hashtag.replace(/^#+/, "").toLowerCase()} />
+        </span>
       </h1>
       {candidates.length === 0 && (
         <Card className="stack">

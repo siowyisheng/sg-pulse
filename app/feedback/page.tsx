@@ -4,6 +4,7 @@ import { Card } from "@/ui/card";
 import { feedbackIsOn } from "@/web/feedback";
 import { currentMe } from "@/web/session";
 import { FeedbackForm } from "./feedback-form";
+import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Feedback · Yah Lah", robots: { index: false } };
@@ -17,7 +18,10 @@ export default async function Feedback({ searchParams }: { searchParams: Promise
   const page = from && /^\/[A-Za-z0-9/_\-.]*$/.test(from) ? from : "";
   return (
     <main className="page">
-      <h1>Feedback</h1>
+      <h1>
+        <Emoji char="💬" />
+        Feedback
+      </h1>
       <Card className="stack">
         <p>Tell us about a problem, or a suggestion. It goes to the person who runs Yah Lah, and it&apos;s read.</p>
         <FeedbackForm page={page} />

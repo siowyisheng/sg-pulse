@@ -616,7 +616,7 @@ ul.stack li {
   opacity: 0;
 }
 
-.toggle-option span {
+.toggle-option > span {
   display: flex;
   align-items: center;
   justify-content: center;
