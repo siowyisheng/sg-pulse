@@ -5,7 +5,7 @@ import { Button } from "@/ui/buttons";
 import { Card } from "@/ui/card";
 import { ModalExample } from "./modal-example";
 
-export const metadata: Metadata = { title: "Style guide · Yah Lah", robots: { index: false } };
+export const metadata: Metadata = { title: "Style guide", robots: { index: false } };
 
 const kebab = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 

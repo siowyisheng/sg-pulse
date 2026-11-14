@@ -8,7 +8,7 @@ import { formatCycle } from "@/web/format";
 import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Earlier days · Yah Lah" };
+export const metadata: Metadata = { title: "Earlier days" };
 
 /** Past Feelings of the Day, newest first. Open to everyone. */
 export default async function Archive({ searchParams }: { searchParams: Promise<{ before?: string | string[] }> }) {

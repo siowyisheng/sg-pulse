@@ -18,7 +18,7 @@ type Props = { params: Promise<{ polarity: string; hashtag: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { polarity, hashtag } = await params;
-  return { title: `#${decoded(hashtag)} · ${POLARITY_LABEL[polarityFrom(polarity) ?? "good"]} Feelings · Yah Lah` };
+  return { title: `#${decoded(hashtag)} · ${POLARITY_LABEL[polarityFrom(polarity) ?? "good"]} Feelings` };
 }
 
 /** Up to 10 of today's Candidates under a Hashtag, in jumbled order, with Bylines and no counts. Open to everyone. */

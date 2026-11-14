@@ -1,7 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { DESIGNS, FRONT_PAGE_LOOKS, type ApprovalChoice } from "@/core/app";
+import { APP_NAMES, DESIGNS, FRONT_PAGE_LOOKS, type ApprovalChoice } from "@/core/app";
 import { bylineText } from "@/core/byline";
 import { nextCycle } from "@/core/cycle";
 import type { Polarity } from "@/core/feeling-rules";
@@ -13,14 +13,15 @@ import { DESIGN_DESCRIPTIONS } from "@/ui/design-descriptions";
 import { Emoji } from "@/ui/emoji";
 import { LOOK_DESCRIPTIONS } from "@/ui/front-page-looks";
 import { formatCycle, formatMoment, yahLahs } from "@/web/format";
+import { APP_NAME_TEXT } from "@/web/app-name";
 import { POLARITY_LABEL } from "@/web/polarity";
 import { currentMe } from "@/web/session";
-import { approveAction, clearReportAction, setDesignAction, setFrontPageLookAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
+import { approveAction, clearReportAction, setAppNameAction, setDesignAction, setFrontPageLookAction, takeDownAction, unscheduleSeedFeelingAction, withdrawApprovalAction } from "./actions";
 import { NoticeForm } from "./notice-form";
 import { SeedForm } from "./seed-form";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin · Yah Lah", robots: { index: false } };
+export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
 /** The Admin area. To anyone else it does not exist. */
 function Choices({ polarity, choices, approvedId, goesLive }: { polarity: Polarity; choices: ApprovalChoice[]; approvedId: string | null; goesLive: string }) {
@@ -66,7 +67,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const showing = [live.good, live.bad].filter((feeling) => feeling !== null);
   const missed = (await searchParams).problem === "NOT_A_CHOICE";
   const today = (await getApp()).currentCycle();
-  const [scheduled, look, design] = await Promise.all([me.asAdmin().scheduledSeedFeelings(), (await getApp()).frontPageLook(), (await getApp()).design()]);
+  const [scheduled, look, design, appName] = await Promise.all([
+    me.asAdmin().scheduledSeedFeelings(),
+    (await getApp()).frontPageLook(),
+    (await getApp()).design(),
+    (await getApp()).appName(),
+  ]);
   return (
     <main className="page">
       <h1>Admin</h1>
@@ -168,6 +174,28 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <p className="muted">Written by the team, in your own words: never copied from anywhere. It shows as &ldquo;From the team&rdquo;, with no Byline.</p>
         <SeedForm firstCycle={today} defaultCycle={nextCycle(today)} />
       </Card>
+      <section className="stack">
+        <h2>App name</h2>
+        <p className="muted">
+          What the site calls itself on its screens and in browser tabs, for everyone, at once. The button for an Upvote still says &ldquo;Yah Lah&rdquo; whichever name you pick.
+        </p>
+        <Card className="stack wide">
+          {APP_NAMES.map((option) => (
+            <div key={option} className="feeling-meta spread">
+              <strong>{APP_NAME_TEXT[option]}</strong>
+              {option === appName ? (
+                <StateChip>Showing now</StateChip>
+              ) : (
+                <form action={setAppNameAction.bind(null, option)}>
+                  <Button variant="ghost" type="submit">
+                    Use this name
+                  </Button>
+                </form>
+              )}
+            </div>
+          ))}
+        </Card>
+      </section>
       <section className="stack">
         <h2>Design</h2>
         <p className="muted">

@@ -2,15 +2,17 @@
 
 import { Share2 } from "lucide-react";
 import { useState } from "react";
+import { useAppName } from "./app-name";
 
 /** Shares a Feeling of the Day's link: the phone's own share sheet where there is one, otherwise the link is copied. */
 export function ShareButton({ path, text }: { path: string; text: string }) {
   const [copied, setCopied] = useState(false);
+  const name = useAppName();
 
   async function share() {
     const url = new URL(path, window.location.origin).toString();
     try {
-      if (navigator.share) await navigator.share({ title: "Yah Lah", text, url });
+      if (navigator.share) await navigator.share({ title: name, text, url });
       else {
         await navigator.clipboard.writeText(url);
         setCopied(true);

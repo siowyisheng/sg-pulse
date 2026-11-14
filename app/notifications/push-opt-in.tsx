@@ -4,6 +4,7 @@ import { Bell, CircleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/ui/buttons";
 import { subscribeToPushAction } from "./push-actions";
+import { useAppName } from "@/ui/app-name";
 
 type Situation = "checking" | "ready" | "needs-home-screen" | "unsupported" | "blocked" | "on";
 
@@ -21,6 +22,7 @@ const toBase64 = (buffer: ArrayBuffer | null) => (buffer ? btoa(String.fromCharC
  * Home Screen, so that is what the person is told there.
  */
 export function PushOptIn({ publicKey }: { publicKey: string }) {
+  const name = useAppName();
   const [situation, setSituation] = useState<Situation>("checking");
   const [problem, setProblem] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -61,10 +63,10 @@ export function PushOptIn({ publicKey }: { publicKey: string }) {
     <div className="stack">
       {situation === "needs-home-screen" && (
         <p className="notice" role="note">
-          <span>On an iPhone, notifications only work once Yah Lah is added to your Home Screen: tap Share, then &ldquo;Add to Home Screen&rdquo;, and open Yah Lah from there.</span>
+          <span>On an iPhone, notifications only work once {name} is added to your Home Screen: tap Share, then &ldquo;Add to Home Screen&rdquo;, and open {name} from there.</span>
         </p>
       )}
-      {situation === "unsupported" && <p className="muted">This browser can&apos;t receive notifications. Yah Lah still works without them.</p>}
+      {situation === "unsupported" && <p className="muted">This browser can&apos;t receive notifications. {name} still works without them.</p>}
       {situation === "blocked" && <p className="muted">Notifications are blocked for this site. You can allow them in your browser&apos;s settings.</p>}
       {situation === "on" && <p role="status">Done. You&apos;ll get one notification a morning.</p>}
       {problem && (

@@ -12,6 +12,8 @@ import { isSingpassConnected } from "@/web/singpass";
 import { siteUrl } from "@/web/site";
 import "./globals.css";
 import "./designs.css";
+import { AppNameProvider } from "@/ui/app-name";
+import { currentAppName } from "@/web/app-name";
 
 // next/font serves the files from our own domain and sizes the fallback font to match, so text
 // doesn't jump when the real font arrives.
@@ -26,12 +28,16 @@ const bricolage = localFont({ src: "./fonts/bricolage-grotesque-latin-wght-norma
 const fredoka = localFont({ src: "./fonts/fredoka-latin-wght-normal.woff2", variable: "--font-fredoka", weight: "300 700", display: "swap", preload: false });
 const fontVariables = [inter, jakarta, baloo, anton, righteous, youngSerif, bricolage, fredoka].map((font) => font.variable).join(" ");
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: "Yah Lah",
-  description: "How's Singapore feeling today? One Good and one Bad Feeling a day.",
-  openGraph: { siteName: "Yah Lah", type: "website" },
-};
+/** Every page's title ends with the App name an Admin chose; a page sets only its own part. */
+export async function generateMetadata(): Promise<Metadata> {
+  const name = await currentAppName();
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: { default: name, template: `%s · ${name}` },
+    description: "How's Singapore feeling today? One Good and one Bad Feeling a day.",
+    openGraph: { siteName: name, type: "website" },
+  };
+}
 
 /** The browser's bar takes the header's colour in the Design being shown. */
 export async function generateViewport(): Promise<Viewport> {
@@ -40,7 +46,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [me, { design, previewing }] = await Promise.all([currentMe(), currentDesign()]);
+  const [me, { design, previewing }, name] = await Promise.all([currentMe(), currentDesign(), currentAppName()]);
   return (
     <html lang="en" className={fontVariables} data-design={design === "classic" ? undefined : design}>
       <head>
@@ -54,9 +60,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </p>
         )}
         <header className="site-header">
-          <a className="wordmark" href="/" aria-label="Yah Lah home">
+          <a className="wordmark" href="/" aria-label={`${name} home`}>
             <img src="/brand/mark.png" alt="" width={32} height={32} />
-            <span>Yah Lah</span>
+            <span>{name}</span>
           </a>
           <nav className="header-actions" aria-label="Your account">
             {me?.isAdmin && (
@@ -78,7 +84,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             )}
           </nav>
         </header>
-        {children}
+        <AppNameProvider name={name}>{children}</AppNameProvider>
       </body>
     </html>
   );

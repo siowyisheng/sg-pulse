@@ -10,13 +10,14 @@ import { commercialSettings } from "@/web/commercial";
 import { feedbackIsOn } from "@/web/feedback";
 import { currentMe } from "@/web/session";
 import { isSingpassConnected } from "@/web/singpass";
+import { currentAppName } from "@/web/app-name";
 
 // The Cycle comes from the time of each request, so this page is never built ahead of time.
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ look?: string | string[] }> }) {
   const app = await getApp();
-  const [today, me, chosen, { look: asked }, { design }] = await Promise.all([app.feelingsOfTheDay(), currentMe(), app.frontPageLook(), searchParams, currentDesign()]);
+  const [today, me, chosen, { look: asked }, { design }, name] = await Promise.all([app.feelingsOfTheDay(), currentMe(), app.frontPageLook(), searchParams, currentDesign(), currentAppName()]);
   // An Admin (or anyone, in the local demo) can try a look out with ?look=… before switching everyone to it.
   // Every Design but Classic brings its own first screen.
   const look = design !== "classic" ? DESIGN_FIRST_SCREEN[design] : (me?.isAdmin || isDemoMode()) && isFrontPageLook(asked) ? asked : chosen;
@@ -53,9 +54,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           {supportUrl && (
             <>
               <a href={supportUrl} target="_blank" rel="noopener noreferrer">
-                Support Yah Lah
+                Support {name}
               </a>
-              <p className="caption muted">Chip in to help keep Yah Lah running. This is support for the site, not a charity donation.</p>
+              <p className="caption muted">Chip in to help keep {name} running. This is support for the site, not a charity donation.</p>
             </>
           )}
           {me && feedbackIsOn() && (

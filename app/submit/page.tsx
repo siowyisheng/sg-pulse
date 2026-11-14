@@ -9,7 +9,7 @@ import { SubmitForm } from "./submit-form";
 import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Write a Feeling · Yah Lah" };
+export const metadata: Metadata = { title: "Write a Feeling" };
 
 export default async function Submit() {
   const me = await currentMe();

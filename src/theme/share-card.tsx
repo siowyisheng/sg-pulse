@@ -8,14 +8,14 @@ import { colors } from "./tokens";
  */
 export const SHARE_CARD_SIZE = { width: 1200, height: 630 } as const;
 
-export function ShareCard({ preview }: { preview: SharePreview }) {
+export function ShareCard({ preview, appName }: { preview: SharePreview; appName: string }) {
   const palette = colors.light;
   const accent = preview.polarity === "good" ? palette.goodText : palette.badText;
   const tint = preview.polarity === "good" ? palette.goodTint : palette.badTint;
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: palette.background, color: palette.ink }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "32px 56px", background: palette.primary, color: palette.onSolid }}>
-        <div style={{ fontSize: 44, fontWeight: 800 }}>Yah Lah</div>
+        <div style={{ fontSize: 44, fontWeight: 800 }}>{appName}</div>
         <div style={{ fontSize: 28 }}>How&apos;s Singapore feeling today?</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center", padding: "0 56px", borderLeft: `24px solid ${accent}` }}>

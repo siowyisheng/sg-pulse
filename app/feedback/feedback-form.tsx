@@ -5,6 +5,7 @@ import { startTransition, useActionState, useState, type FormEvent } from "react
 import { FEEDBACK_MAX_CHARACTERS } from "@/core/feedback";
 import { Button } from "@/ui/buttons";
 import { sendFeedbackAction } from "./actions";
+import { useAppName } from "@/ui/app-name";
 
 /** Characters as a person counts them, so an emoji is one. */
 const characters = (text: string) => [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text)].length;
@@ -12,6 +13,7 @@ const characters = (text: string) => [...new Intl.Segmenter(undefined, { granula
 /** `page` is where the person was when they chose Feedback, so the owner knows what they were looking at. */
 export function FeedbackForm({ page }: { page: string }) {
   const [state, send, busy] = useActionState(sendFeedbackAction, {});
+  const name = useAppName();
   const [kind, setKind] = useState("");
   const [message, setMessage] = useState("");
   const [replyTo, setReplyTo] = useState("");
@@ -26,7 +28,7 @@ export function FeedbackForm({ page }: { page: string }) {
     return (
       <div className="stack">
         <p role="status">Thanks, we got it.</p>
-        <a href="/">Back to Yah Lah</a>
+        <a href="/">Back to {name}</a>
       </div>
     );
   }

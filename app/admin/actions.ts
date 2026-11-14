@@ -118,3 +118,15 @@ export async function setDesignAction(design: string): Promise<void> {
   }
   revalidatePath("/", "layout");
 }
+
+/** Renames the site on its screens for everyone. */
+export async function setAppNameAction(name: string): Promise<void> {
+  const me = await currentMe();
+  if (!me?.isAdmin) return;
+  try {
+    await me.asAdmin().setAppName(name);
+  } catch (error) {
+    messageOf(error);
+  }
+  revalidatePath("/", "layout");
+}

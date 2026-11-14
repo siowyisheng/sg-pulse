@@ -5,7 +5,7 @@ A daily, mobile-first read of what Singapore is feeling: two short public sentim
 ## Language
 
 **Yah Lah**:
-The product's name, which is also the label on the Upvote button.
+The product's name, which is also the label on the Upvote button. The label stays "Yah Lah" even when an Admin picks another App name.
 _Avoid_: SG Pulse (the repository and logo wordmark still use it for now)
 
 **Feeling**:
@@ -92,6 +92,10 @@ _Avoid_: Delete, ban
 
 **Removal request**:
 A User's ask that a Feeling of theirs that has been a Feeling of the Day be removed, archive entry included. The Admin honours it within 24 hours, by a Take-down. Deleting an account does not make one; a User can ask for it in the same go.
+
+**App name**:
+What the site calls itself on its screens and in browser tabs: Yah Lah, SG Pulse, How Is Singapore, SG Feels, Shiok or Not or Today in SG. Chosen by an Admin for everyone. The installed app's name and the push notifications still say Yah Lah.
+_Avoid_: Brand, title
 
 **Design**:
 The look of every screen a Visitor or User sees (colours, type, shapes and emojis): Classic, Kopitiam, Hawker signboard, Pasar malam, Peranakan tiles, MRT, Void deck or Garden City. Chosen by an Admin for everyone, who can preview one first; the screens, words and journeys are the same in each.

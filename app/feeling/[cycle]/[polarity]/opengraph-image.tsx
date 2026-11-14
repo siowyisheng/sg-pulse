@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { getApp } from "@/composition";
 import { SHARE_CARD_SIZE, ShareCard } from "@/theme/share-card";
 import { polarityFrom } from "@/web/polarity";
+import { currentAppName } from "@/web/app-name";
 
-export const alt = "A Feeling of the Day on Yah Lah";
+export const alt = "A Feeling of the Day";
 export const size = SHARE_CARD_SIZE;
 export const contentType = "image/png";
 
@@ -14,5 +15,5 @@ export default async function Image({ params }: { params: Promise<{ cycle: strin
   const known = polarityFrom(polarity);
   const preview = known ? await (await getApp()).sharePreview(cycle, known) : null;
   if (!preview) notFound();
-  return new ImageResponse(<ShareCard preview={preview} />, size);
+  return new ImageResponse(<ShareCard preview={preview} appName={await currentAppName()} />, size);
 }

@@ -5,6 +5,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { isInAppBrowser } from "@/web/in-app-browser";
 import { Button, type ButtonVariant } from "./buttons";
 import { Modal } from "./modal";
+import { useAppName } from "./app-name";
 
 /**
  * A button for something that needs a Singpass login. Tapping it starts the login, except inside
@@ -14,6 +15,7 @@ import { Modal } from "./modal";
 export function LoginButton({ action, variant = "secondary", large = false, children }: { action: () => Promise<void>; variant?: ButtonVariant; large?: boolean; children: ReactNode }) {
   /** The page's address, once the person has to take it to another browser. */
   const [linkToOpen, setLinkToOpen] = useState<string>();
+  const name = useAppName();
   const [copied, setCopied] = useState(false);
 
   function stopInsideAnotherApp(event: FormEvent) {
@@ -41,7 +43,7 @@ export function LoginButton({ action, variant = "secondary", large = false, chil
       </form>
       <Modal open={linkToOpen !== undefined} onClose={() => setLinkToOpen(undefined)} title="Open in your browser">
         <div className="stack">
-          <p>Singpass can&apos;t log you in from inside this app. Open Yah Lah in Safari or Chrome, then log in there.</p>
+          <p>Singpass can&apos;t log you in from inside this app. Open {name} in Safari or Chrome, then log in there.</p>
           <p className="caption muted selectable">{linkToOpen}</p>
           <Button variant="secondary" onClick={copyLink}>
             <Copy aria-hidden="true" size={18} /> {copied ? "Link copied" : "Copy link"}

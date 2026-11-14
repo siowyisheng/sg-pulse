@@ -9,7 +9,7 @@ import { startSingpassAction } from "../auth-actions";
 import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Log in · Yah Lah" };
+export const metadata: Metadata = { title: "Log in" };
 
 export default async function SignIn({ searchParams }: { searchParams: Promise<{ problem?: string | string[] }> }) {
   if (!isSingpassConnected()) notFound();

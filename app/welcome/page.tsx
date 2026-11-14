@@ -8,9 +8,10 @@ import { Card } from "@/ui/card";
 import { singpassProblemOf, singpassProof } from "@/web/singpass";
 import { confirmConsentAction, declineConsentAction } from "../auth-actions";
 import { Emoji } from "@/ui/emoji";
+import { currentAppName } from "@/web/app-name";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Before you join · Yah Lah" };
+export const metadata: Metadata = { title: "Before you join" };
 
 const SEX_WORDS = { M: "male", F: "female" } as const;
 
@@ -70,7 +71,7 @@ export default async function Welcome() {
       </Card>
       <form className="actions">
         <Button variant="yah-lah" type="submit" formAction={confirmConsentAction}>
-          I agree, join Yah Lah
+          I agree, join {await currentAppName()}
         </Button>
         <Button variant="ghost" type="submit" formAction={declineConsentAction}>
           No thanks

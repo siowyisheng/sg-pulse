@@ -7,7 +7,7 @@ import { deleteAccountAction } from "../actions";
 import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Delete my account · Yah Lah", robots: { index: false } };
+export const metadata: Metadata = { title: "Delete my account", robots: { index: false } };
 
 /** Deleting an account, with what it does and doesn't remove said plainly first. */
 export default async function DeleteAccount() {

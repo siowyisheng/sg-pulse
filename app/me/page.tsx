@@ -16,7 +16,7 @@ import { requestRemovalAction } from "./actions";
 import { Emoji, HashtagLabel } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "My Feelings · Yah Lah" };
+export const metadata: Metadata = { title: "My Feelings" };
 
 function State({ feeling }: { feeling: MyFeeling }) {
   switch (feeling.state) {

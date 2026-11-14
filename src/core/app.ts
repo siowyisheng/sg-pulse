@@ -5,6 +5,7 @@ import { bylineOf, bylineText, type Byline } from "./byline";
 import { cycleOf, type Cycle } from "./cycle";
 import { AdminError } from "./errors";
 import { createFeedback, type FeedbackInput } from "./feedback";
+import { createAppName, type AppName } from "./app-name";
 import { createDesign, type Design } from "./design";
 import { createFrontPageLook, type FrontPageLook } from "./front-page-look";
 import { createPrivacy, type RemovalRequest } from "./privacy";
@@ -20,6 +21,7 @@ export type { AuditEntry, ReportedFeeling } from "./moderation";
 export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFeeling, SharePreview, MyCandidate, MyUpvote, FeelingOfTheDay, FeelingsOfTheDay, FeelingState, MyFeeling, ScheduledSeedFeeling, Submission } from "./feelings";
 export { FRONT_PAGE_LOOKS, isFrontPageLook, type FrontPageLook } from "./front-page-look";
 export { DESIGNS, isDesign, type Design } from "./design";
+export { APP_NAMES, isAppName, type AppName } from "./app-name";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -51,6 +53,8 @@ export interface Admin {
   setFrontPageLook(look: string): Promise<void>;
   /** Switches the Design of every front-facing screen for everyone, at once. Refused for a Design that doesn't exist. */
   setDesign(design: string): Promise<void>;
+  /** Renames the site on its screens for everyone, at once. Refused for a name that isn't one of the choices. */
+  setAppName(name: string): Promise<void>;
 }
 
 export interface AppDeps {
@@ -121,6 +125,7 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
   const privacy = createPrivacy({ db, clock });
   const frontPageLook = createFrontPageLook({ db, clock });
   const design = createDesign({ db, clock });
+  const appName = createAppName({ db, clock });
   const feedback = createFeedback({ db, clock, mailer, to: feedbackTo, record: moderation.record });
 
   /** Forgets a browser the push service says is gone. */
@@ -159,6 +164,10 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
     async setDesign(name) {
       const chosen = await design.set(name);
       await moderation.record(adminId, "design", null, chosen);
+    },
+    async setAppName(name) {
+      const chosen = await appName.set(name);
+      await moderation.record(adminId, "app-name", null, chosen);
     },
   });
 
@@ -262,6 +271,9 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
 
     /** The Design every front-facing screen is in, as an Admin last chose. Open to any Visitor. */
     design: (): Promise<Design> => design.current(),
+
+    /** What the site calls itself on its screens, as an Admin last chose. Open to any Visitor. */
+    appName: (): Promise<AppName> => appName.current(),
 
     /** Past Feelings of the Day, newest day first, a page of days at a time. Open to any Visitor. */
     archive: (page?: { before?: string; days?: number }): Promise<PublishedFeeling[]> => feelings.archive(page),

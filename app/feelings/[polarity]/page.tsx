@@ -13,7 +13,7 @@ type Props = { params: Promise<{ polarity: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const polarity = polarityFrom((await params).polarity);
-  return { title: polarity ? `${POLARITY_LABEL[polarity]} Feelings today · Yah Lah` : "Yah Lah" };
+  return polarity ? { title: `${POLARITY_LABEL[polarity]} Feelings today` } : {};
 }
 
 /** A Polarity's word cloud: today's Hashtags, bigger the more Feelings use them. Open to everyone. */

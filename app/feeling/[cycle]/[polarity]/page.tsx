@@ -7,6 +7,7 @@ import { PublishedFeelingBody } from "@/ui/published-feeling";
 import { formatCycle } from "@/web/format";
 import { POLARITY_LABEL, polarityFrom } from "@/web/polarity";
 import { Emoji } from "@/ui/emoji";
+import { currentAppName } from "@/web/app-name";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,11 @@ async function find(params: Props["params"]) {
 /** The preview carries the text and Hashtag only: the Byline is on the page, not in what gets passed around. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const feeling = await find(params);
-  if (!feeling) return { title: "Yah Lah" };
-  const title = `${POLARITY_LABEL[feeling.polarity]} Feeling of the Day, ${formatCycle(feeling.cycle)} · Yah Lah`;
+  if (!feeling) return {};
+  const name = await currentAppName();
+  const title = `${POLARITY_LABEL[feeling.polarity]} Feeling of the Day, ${formatCycle(feeling.cycle)} · ${name}`;
   const description = `${feeling.text} #${feeling.hashtag}${feeling.correctionNotice ? ` (Correction notice: ${feeling.correctionNotice})` : ""}`;
-  return { title, description, openGraph: { title, description, siteName: "Yah Lah", type: "article" }, twitter: { card: "summary_large_image", title, description } };
+  return { title: { absolute: title }, description, openGraph: { title, description, siteName: name, type: "article" }, twitter: { card: "summary_large_image", title, description } };
 }
 
 /** What a share link opens: one Feeling of the Day, on the day it was chosen. Candidates have no such page. */

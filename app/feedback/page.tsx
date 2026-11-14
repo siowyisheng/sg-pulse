@@ -5,9 +5,10 @@ import { feedbackIsOn } from "@/web/feedback";
 import { currentMe } from "@/web/session";
 import { FeedbackForm } from "./feedback-form";
 import { Emoji } from "@/ui/emoji";
+import { currentAppName } from "@/web/app-name";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Feedback · Yah Lah", robots: { index: false } };
+export const metadata: Metadata = { title: "Feedback", robots: { index: false } };
 
 /** A problem or a suggestion for the owner, by email. For signed-in Users. `from` is the page the link was on. */
 export default async function Feedback({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
@@ -23,7 +24,7 @@ export default async function Feedback({ searchParams }: { searchParams: Promise
         Feedback
       </h1>
       <Card className="stack">
-        <p>Tell us about a problem, or a suggestion. It goes to the person who runs Yah Lah, and it&apos;s read.</p>
+        <p>Tell us about a problem, or a suggestion. It goes to the person who runs {await currentAppName()}, and it&apos;s read.</p>
         <FeedbackForm page={page} />
       </Card>
     </main>

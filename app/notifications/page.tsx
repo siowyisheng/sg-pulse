@@ -6,7 +6,7 @@ import { PushOptIn } from "./push-opt-in";
 import { Emoji } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Daily notification · Yah Lah" };
+export const metadata: Metadata = { title: "Daily notification" };
 
 /** Offered right after someone joins, and from My Feelings: one notification each morning naming the day's two Hashtags. */
 export default async function Notifications() {

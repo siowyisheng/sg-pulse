@@ -13,6 +13,10 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 - [ ] Add tomorrow's Good and Bad Seed Feelings: `npm run seed -- 2026-11-14 good kopi "your text"`. Without them the front page says "Nothing here today." Write them yourself; copy nothing from Twitter/X or anywhere else.
   - The Admin area (`/admin`) does the same job with a form, once Singpass is connected and you have made yourself an Admin (see Singpass below).
 
+## App name
+
+- [ ] Decide what the site calls itself. In `/admin`, under "App name", pick one of Yah Lah (now), SG Pulse, How Is Singapore, SG Feels, Shiok or Not or Today in SG; it switches the screens and browser tabs for everyone at once. Two places still say Yah Lah whatever you pick, and need a code change once you settle: the name of the installed app (`app/manifest.ts`) and the title of the push notifications. The Upvote button keeps its "Yah Lah" label on purpose.
+
 ## Design
 
 - [ ] Choose a Design. Seven new ones are built beside Classic (what shows now): Kopitiam, Hawker signboard, Pasar malam, Peranakan tiles, MRT, Void deck and Garden City. In `/admin`, under "Design", press Preview on one: the whole site switches to it for you alone, with a bar at the top to stop. Browse the screens on your phone, then press "Use this Design" to switch everyone. No migration is needed beyond `0008` above. Locally, `npm run demo` and open `/design-preview?design=mrt` (or any other) to try one without signing in.

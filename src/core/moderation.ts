@@ -26,7 +26,7 @@ export interface ReportedFeeling {
   yahLahs: number;
 }
 
-export type AuditAction = "report" | "report-cleared" | "take-down" | "correction-notice" | "approve" | "approval-withdrawn" | "seed-scheduled" | "seed-unscheduled" | "submit" | "removal-requested" | "account-deleted" | "feedback" | "front-page-look" | "design";
+export type AuditAction = "report" | "report-cleared" | "take-down" | "correction-notice" | "approve" | "approval-withdrawn" | "seed-scheduled" | "seed-unscheduled" | "submit" | "removal-requested" | "account-deleted" | "feedback" | "front-page-look" | "design" | "app-name";
 
 export interface AuditEntry {
   at: Date;
