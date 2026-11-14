@@ -43,3 +43,22 @@ describe("how a User's Yah Lah did", () => {
     expect(await upvoter.me.yesterdaysYahLah()).toEqual({ text: "Got a seat", polarity: "good", hashtag: "mrt", others: 2, line: "2 others chose the same Feeling as you yesterday" });
   });
 });
+
+describe("how a Submitter's Feeling did", () => {
+  it("tells them the next morning, in their push and beside the Feeling on My Feelings, how many people chose it", async () => {
+    const world = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    for (const polarity of ["good", "bad"] as const) {
+      await world.app.operator.scheduleSeedFeeling({ cycle: "2026-11-13", polarity, text: `A ${polarity} day`, hashtag: polarity === "good" ? "kopi" : "queue" });
+    }
+    const writer = await world.signUp(person(1));
+    await writer.me.subscribeToPush(subscription(1));
+    const seat = await writer.me.submitFeeling({ text: "Got a seat", polarity: "good", hashtag: "mrt" });
+    for (const n of [2, 3, 4]) await (await world.signUp(person(n))).me.upvote(seat.id);
+
+    world.clock.set("2026-11-13T07:00:00+08:00");
+    await world.app.operator.sendDailyPush();
+
+    expect(world.webPush.sent.map((push) => push.payload.body)).toEqual(["SG's FOTD are about #kopi and #queue. 3 people chose your Feeling yesterday."]);
+    expect(await writer.me.yesterdaysFeeling()).toEqual({ feelingId: seat.id, people: 3, line: "3 people chose your Feeling yesterday" });
+  });
+});

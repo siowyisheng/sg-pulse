@@ -130,3 +130,69 @@ describe("how a User's Yah Lah did, at the edges", () => {
     expect(await later.first.me.yesterdaysYahLah()).toBeNull();
   });
 });
+
+describe("how a Submitter's Feeling did, at the edges", () => {
+  const DAILY = "SG's FOTD are about #kopi and #queue";
+
+  /** Thursday: the subscribed writer's Feeling, given a Yah Lah by `upvoters` other Users. */
+  async function thursday(upvoters: number) {
+    const world = await worldWithSeeds();
+    const writer = await world.signUp(person(0));
+    await writer.me.subscribeToPush(subscription(0));
+    const feeling = await writer.me.submitFeeling({ text: "Got a seat", polarity: "good", hashtag: "mrt" });
+    for (let n = 1; n <= upvoters; n++) await (await world.signUp(person(n))).me.upvote(feeling.id);
+    return { world, writer, feeling, friday: () => world.clock.set("2026-11-13T07:00:00+08:00") };
+  }
+
+  it("says '1 person' when one User chose it, and nothing when nobody did", async () => {
+    const one = await thursday(1);
+    one.friday();
+    expect((await one.writer.me.yesterdaysFeeling())?.line).toBe("1 person chose your Feeling yesterday");
+
+    const none = await thursday(0);
+    none.friday();
+    await none.world.app.operator.sendDailyPush();
+    expect(await none.writer.me.yesterdaysFeeling()).toBeNull();
+    expect(none.world.webPush.sent.map((push) => push.payload.body)).toEqual([DAILY]);
+  });
+
+  it("carries both lines in one notification when the Submitter also gave a Yah Lah", async () => {
+    const { world, writer, friday } = await thursday(2);
+    const other = await (await world.signUp(person(50))).me.submitFeeling({ text: "Prata was crispy", polarity: "good", hashtag: "hawker" });
+    await writer.me.upvote(other.id);
+    await (await world.signUp(person(51))).me.upvote(other.id);
+    friday();
+    await world.app.operator.sendDailyPush();
+    expect(world.webPush.sent.map((push) => push.payload.body)).toEqual([`${DAILY}. 1 other chose the same Feeling as you yesterday. 2 people chose your Feeling yesterday.`]);
+  });
+
+  it("tells a winner in the same words, and nothing about one taken down, under review at the close, or from an earlier Cycle", async () => {
+    const won = await thursday(2);
+    const admin = (await won.world.signUpAdmin(person(90))).me.asAdmin();
+    won.world.clock.set("2026-11-12T22:00:00+08:00");
+    await admin.approve(won.feeling.id);
+    won.friday();
+    expect((await won.writer.me.yesterdaysFeeling())?.line).toBe("2 people chose your Feeling yesterday");
+    await admin.takeDown(won.feeling.id);
+    expect(await won.writer.me.yesterdaysFeeling()).toBeNull();
+
+    const reported = await thursday(2);
+    await (await reported.world.signUp(person(80))).me.report(reported.feeling.id);
+    reported.friday();
+    expect(await reported.writer.me.yesterdaysFeeling()).toBeNull();
+
+    const earlier = await thursday(2);
+    earlier.world.clock.set("2026-11-14T07:00:00+08:00");
+    expect(await earlier.writer.me.yesterdaysFeeling()).toBeNull();
+  });
+
+  it("tells of Thursday's Feeling, not the one the Submitter queued that night for Friday", async () => {
+    const { world, writer, feeling, friday } = await thursday(2);
+    world.clock.set("2026-11-12T22:00:00+08:00");
+    const queued = await writer.me.submitFeeling({ text: "Late thought", polarity: "bad", hashtag: "mrt" });
+    friday();
+    const outcome = await writer.me.yesterdaysFeeling();
+    expect(outcome?.feelingId).toBe(feeling.id);
+    expect(outcome?.feelingId).not.toBe(queued.id);
+  });
+});

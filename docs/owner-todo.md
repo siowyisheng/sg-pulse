@@ -32,6 +32,7 @@ Last updated: 13 Nov 2026, after tickets #2, #5 to #15 and #17 to #20. #16 (Elec
 - [ ] #16 (Election Mode) is deferred at your say-so, as the next election is not expected until 2030. Two things hang on it:
   - #19 (installable PWA and the daily push) is marked as blocked by #16 on GitHub. It only needs #16 to leave held Hashtags out of the push. To build #19 now, say so, and it will be built without that part.
   - Until #19 exists there are no pushes, so nothing reminds you to approve each evening.
+  - The morning lines about yesterday ("X others chose the same Feeling as you", "X people chose your Feeling", #26 and #27) tell one person one Feeling's count. #16 should leave those out for held Feelings too, as it hides their tallies.
   - An election can be called early. Build #16 before one is, and ask the lawyer which topics it must hold.
 
 ## When something is Reported, or a direction arrives

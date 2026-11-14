@@ -7,7 +7,7 @@ import { AdminError } from "./errors";
 import { createFeedback, type FeedbackInput } from "./feedback";
 import { createAppName, type AppName } from "./app-name";
 import { createDesign, type Design } from "./design";
-import { createOutcomes, type YahLahOutcome } from "./outcomes";
+import { createOutcomes, type FeelingOutcome, type YahLahOutcome } from "./outcomes";
 import { createFrontPageLook, type FrontPageLook } from "./front-page-look";
 import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
@@ -23,7 +23,7 @@ export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFe
 export { FRONT_PAGE_LOOKS, isFrontPageLook, type FrontPageLook } from "./front-page-look";
 export { DESIGNS, isDesign, type Design } from "./design";
 export { APP_NAMES, isAppName, type AppName } from "./app-name";
-export type { YahLahOutcome } from "./outcomes";
+export type { FeelingOutcome, YahLahOutcome } from "./outcomes";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -96,6 +96,8 @@ export interface Me {
   oneByOne(polarity: Polarity): Promise<MyCandidate[]>;
   /** How their Yah Lah in the Cycle just closed did: null when they gave none, nobody else chose it, or it has since been Reported or taken down. */
   yesterdaysYahLah(): Promise<YahLahOutcome | null>;
+  /** How many people chose the Feeling they wrote for the Cycle just closed: null when none did, or it was under review or taken down. */
+  yesterdaysFeeling(): Promise<FeelingOutcome | null>;
   /** Says Yah Lah: gives their one Upvote for the Cycle to a Candidate, moving it if it was elsewhere. */
   upvote(feelingId: string): Promise<void>;
   /** Takes their Upvote back. Possible until the Cycle ends. */
@@ -249,6 +251,7 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
         candidates: (input) => withMyMarks(userId, feelings.candidates(input)),
         oneByOne: (polarity) => withMyMarks(userId, feelings.oneByOne(polarity)),
         yesterdaysYahLah: () => outcomes.yahLah(userId),
+        yesterdaysFeeling: () => outcomes.feeling(userId),
         upvote: (feelingId) => feelings.upvote(userId, feelingId),
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
@@ -372,17 +375,22 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
             userId: schema.pushSubscriptions.userId,
           });
         const daily = `SG's FOTD are about ${tags.join(" and ")}`;
-        // How each User's Yah Lah did yesterday, worked out once however many browsers they have.
-        const yahLahLines = new Map<string, Promise<string | null>>();
-        const yahLahLineFor = (userId: string) => {
-          if (!yahLahLines.has(userId)) yahLahLines.set(userId, outcomes.yahLah(userId).then((outcome) => outcome?.line ?? null));
-          return yahLahLines.get(userId)!;
+        // Each User's own lines about yesterday (their Yah Lah, then their Feeling), worked out once however many browsers they have.
+        const linesByUser = new Map<string, Promise<string[]>>();
+        const linesFor = (userId: string) => {
+          if (!linesByUser.has(userId)) {
+            linesByUser.set(
+              userId,
+              Promise.all([outcomes.yahLah(userId), outcomes.feeling(userId)]).then((yesterdays) => yesterdays.flatMap((outcome) => (outcome ? [outcome.line] : []))),
+            );
+          }
+          return linesByUser.get(userId)!;
         };
         let sent = 0;
         for (const { userId, ...subscription } of claimed) {
           try {
-            const line = await yahLahLineFor(userId);
-            const body = line ? `${daily}. ${line}.` : daily;
+            const lines = await linesFor(userId);
+            const body = lines.length > 0 ? `${[daily, ...lines].join(". ")}.` : daily;
             await webPush.send(subscription, { title: "Yah Lah", body, link: "/" });
             sent++;
           } catch (error) {

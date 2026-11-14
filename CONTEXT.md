@@ -55,7 +55,7 @@ One Singapore calendar day (00:00 to 23:59 SGT) of Upvoting for its Candidates, 
 _Avoid_: Round, day (when meaning the voting period)
 
 **Upvote**:
-A User's single vote for one Candidate in a Cycle. Its button is labelled "Yah Lah", the same as the product's name. Can be moved or undone until the Cycle ends. Counts stay hidden until the Cycle closes; the morning after, a User is told how many others chose the same Feeling as them, and nothing about any other Feeling's count.
+A User's single vote for one Candidate in a Cycle. Its button is labelled "Yah Lah", the same as the product's name. Can be moved or undone until the Cycle ends. Counts stay hidden until the Cycle closes; the morning after, a User is told how many others chose the same Feeling as them, and a Submitter how many chose theirs, and nothing about any other Feeling's count.
 _Avoid_: Like, vote
 
 ## People

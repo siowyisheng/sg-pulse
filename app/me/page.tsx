@@ -39,7 +39,7 @@ function State({ feeling }: { feeling: MyFeeling }) {
 export default async function MyFeelings() {
   const me = await currentMe();
   if (!me) redirect("/sign-in");
-  const [feelings, submission, upvote, yesterday] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote(), me.yesterdaysYahLah()]);
+  const [feelings, submission, upvote, yahLahYesterday, feelingYesterday] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote(), me.yesterdaysYahLah(), me.yesterdaysFeeling()]);
   return (
     <main className="page">
       <h1>
@@ -66,17 +66,17 @@ export default async function MyFeelings() {
           </span>
         </p>
       )}
-      {yesterday && (
+      {yahLahYesterday && (
         <Card className="stack yesterday">
           <p className="feeling-meta">
             <Emoji char="🤝" />
-            <strong>{yesterday.line}.</strong>
+            <strong>{yahLahYesterday.line}.</strong>
           </p>
           <p className="feeling-meta">
-            <PolarityBadge polarity={yesterday.polarity} />
-            <span>{yesterday.text}</span>
-            <span className={`hashtag hashtag-${yesterday.polarity}`}>
-              <HashtagLabel hashtag={yesterday.hashtag} />
+            <PolarityBadge polarity={yahLahYesterday.polarity} />
+            <span>{yahLahYesterday.text}</span>
+            <span className={`hashtag hashtag-${yahLahYesterday.polarity}`}>
+              <HashtagLabel hashtag={yahLahYesterday.hashtag} />
             </span>
           </p>
         </Card>
@@ -124,6 +124,12 @@ export default async function MyFeelings() {
           <p className={`hashtag hashtag-${feeling.polarity}`}>
             <HashtagLabel hashtag={feeling.hashtag} />
           </p>
+          {feelingYesterday?.feelingId === feeling.id && (
+            <p className="notice" role="note">
+              <Emoji char="👥" />
+              <span>{feelingYesterday.line}.</span>
+            </p>
+          )}
           {feeling.state === "winner" &&
             (feeling.removalRequested ? (
               <p className="caption muted">You&apos;ve asked for this to be removed. It will be, within 24 hours.</p>

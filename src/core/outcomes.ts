@@ -23,6 +23,17 @@ export interface YahLahOutcome {
   line: string;
 }
 
+/** How many people chose a Submitter's Feeling yesterday. */
+export interface FeelingOutcome {
+  feelingId: string;
+  /** Its Upvotes at the close: never 0 (then there is no outcome). */
+  people: number;
+  /** What the Submitter is told. */
+  line: string;
+}
+
+export const feelingLine = (people: number) => (people === 1 ? "1 person chose your Feeling yesterday" : `${people} people chose your Feeling yesterday`);
+
 export const yahLahLine = (others: number) => (others === 1 ? "1 other chose the same Feeling as you yesterday" : `${others} others chose the same Feeling as you yesterday`);
 
 /** The moment a Cycle closed: the start of the next Singapore day. */
@@ -55,6 +66,19 @@ export function createOutcomes({ db, clock }: { db: Db; clock: Clock }) {
       if (others < 1) return null;
       const { feelingId: _feelingId, ...feeling } = mine;
       return { ...feeling, others, line: yahLahLine(others) };
+    },
+
+    /** How the Feeling the User wrote for the Cycle just closed did, or null when there is nothing to tell. Winner or not, in the same words. */
+    async feeling(userId: string): Promise<FeelingOutcome | null> {
+      const cycle = yesterday();
+      const [written] = await db
+        .select({ feelingId: schema.feelings.id, people: count(schema.upvotes.userId) })
+        .from(schema.feelings)
+        .leftJoin(schema.upvotes, and(eq(schema.upvotes.feelingId, schema.feelings.id), eq(schema.upvotes.cycle, cycle)))
+        .where(and(eq(schema.feelings.submitterId, userId), eq(schema.feelings.cycle, cycle), isNull(schema.feelings.removedAt), notUnderReviewAtTheClose(cycle)))
+        .groupBy(schema.feelings.id);
+      if (!written || written.people < 1) return null;
+      return { ...written, line: feelingLine(written.people) };
     },
   };
 }
