@@ -18,10 +18,13 @@ export function isCycle(value: string): value is Cycle {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+const dayAfter = (cycle: Cycle, days: number): Cycle => new Date(Date.parse(`${cycle}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+
 /** The Cycle after this one. */
-export function nextCycle(cycle: Cycle): Cycle {
-  return new Date(Date.parse(`${cycle}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-}
+export const nextCycle = (cycle: Cycle): Cycle => dayAfter(cycle, 1);
+
+/** The Cycle before this one. */
+export const previousCycle = (cycle: Cycle): Cycle => dayAfter(cycle, -1);
 
 /** The hour in Singapore from which a new Feeling is queued for the next Cycle. */
 export const CUT_OFF_HOUR = 21;

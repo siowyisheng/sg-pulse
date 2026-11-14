@@ -46,12 +46,16 @@ _Avoid_: Trending, hot
 A Candidate with hardly any Upvotes yet, given a couple of the places beside the top and Rising Candidates so that fresh Feelings are seen.
 _Avoid_: Fresh, recent
 
+**Standing**:
+Why a Candidate is shown to someone, said on it as a chip: Rising or New. Only those two; a Candidate shown for its Upvotes carries none, so a Standing is never a count.
+_Avoid_: Badge, status
+
 **Cycle**:
 One Singapore calendar day (00:00 to 23:59 SGT) of Upvoting for its Candidates, ending with the next Feelings of the Day being named.
 _Avoid_: Round, day (when meaning the voting period)
 
 **Upvote**:
-A User's single vote for one Candidate in a Cycle. Its button is labelled "Yah Lah", the same as the product's name. Can be moved or undone until the Cycle ends. Counts stay hidden until the winner is announced.
+A User's single vote for one Candidate in a Cycle. Its button is labelled "Yah Lah", the same as the product's name. Can be moved or undone until the Cycle ends. Counts stay hidden until the Cycle closes; the morning after, a User is told how many others chose the same Feeling as them, and nothing about any other Feeling's count.
 _Avoid_: Like, vote
 
 ## People

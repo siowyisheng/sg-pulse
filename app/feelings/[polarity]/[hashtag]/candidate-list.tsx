@@ -4,7 +4,7 @@ import { CircleAlert, Flag } from "lucide-react";
 import { useState, useTransition } from "react";
 import type { Candidate } from "@/core/app";
 import { bylineText } from "@/core/byline";
-import { BylineChip, StateChip, YourYahLahChip } from "@/ui/badges";
+import { BylineChip, StandingChip, StateChip, YourYahLahChip } from "@/ui/badges";
 import { Button } from "@/ui/buttons";
 import { LoginButton } from "@/ui/login-gate";
 import { Modal } from "@/ui/modal";
@@ -88,6 +88,7 @@ export function CandidateList({
           <span className="candidate-text">{candidate.text}</span>
           <span className="feeling-meta">
             <BylineChip>{bylineText(candidate.byline)}</BylineChip>
+            {candidate.standing && <StandingChip standing={candidate.standing} />}
             {candidate.mine && <StateChip>Yours</StateChip>}
             {candidate.id === upvotedId && <YourYahLahChip />}
           </span>

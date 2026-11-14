@@ -39,7 +39,7 @@ function State({ feeling }: { feeling: MyFeeling }) {
 export default async function MyFeelings() {
   const me = await currentMe();
   if (!me) redirect("/sign-in");
-  const [feelings, submission, upvote] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote()]);
+  const [feelings, submission, upvote, yesterday] = await Promise.all([me.myFeelings(), me.submission(), me.myUpvote(), me.yesterdaysYahLah()]);
   return (
     <main className="page">
       <h1>
@@ -65,6 +65,21 @@ export default async function MyFeelings() {
             You can&apos;t Report until {formatMoment(me.reportingTimedOutUntil)}, because a Feeling you Reported was found to be fine. Everything else works as usual.
           </span>
         </p>
+      )}
+      {yesterday && (
+        <Card className="stack yesterday">
+          <p className="feeling-meta">
+            <Emoji char="🤝" />
+            <strong>{yesterday.line}.</strong>
+          </p>
+          <p className="feeling-meta">
+            <PolarityBadge polarity={yesterday.polarity} />
+            <span>{yesterday.text}</span>
+            <span className={`hashtag hashtag-${yesterday.polarity}`}>
+              <HashtagLabel hashtag={yesterday.hashtag} />
+            </span>
+          </p>
+        </Card>
       )}
       <h2>
         <Emoji char="🙌" />

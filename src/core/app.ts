@@ -7,6 +7,7 @@ import { AdminError } from "./errors";
 import { createFeedback, type FeedbackInput } from "./feedback";
 import { createAppName, type AppName } from "./app-name";
 import { createDesign, type Design } from "./design";
+import { createOutcomes, type YahLahOutcome } from "./outcomes";
 import { createFrontPageLook, type FrontPageLook } from "./front-page-look";
 import { createPrivacy, type RemovalRequest } from "./privacy";
 import { createModeration, type AuditEntry, type ReportedFeeling } from "./moderation";
@@ -22,6 +23,7 @@ export type { ApprovalChoice, ApprovalChoices, Candidate, CloudWord, PublishedFe
 export { FRONT_PAGE_LOOKS, isFrontPageLook, type FrontPageLook } from "./front-page-look";
 export { DESIGNS, isDesign, type Design } from "./design";
 export { APP_NAMES, isAppName, type AppName } from "./app-name";
+export type { YahLahOutcome } from "./outcomes";
 
 /** What only an Admin may do. */
 export interface Admin {
@@ -90,6 +92,10 @@ export interface Me {
   myFeelings(): Promise<MyFeeling[]>;
   /** The Candidates under a Hashtag, as anyone sees them, plus which is theirs and which holds their Upvote. */
   candidates(input: { polarity: Polarity; hashtag: string }): Promise<MyCandidate[]>;
+  /** Every Candidate of a Polarity, from every Hashtag, in the order to go through them one at a time, with their own marks. */
+  oneByOne(polarity: Polarity): Promise<MyCandidate[]>;
+  /** How their Yah Lah in the Cycle just closed did: null when they gave none, nobody else chose it, or it has since been Reported or taken down. */
+  yesterdaysYahLah(): Promise<YahLahOutcome | null>;
   /** Says Yah Lah: gives their one Upvote for the Cycle to a Candidate, moving it if it was elsewhere. */
   upvote(feelingId: string): Promise<void>;
   /** Takes their Upvote back. Possible until the Cycle ends. */
@@ -126,10 +132,21 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
   const frontPageLook = createFrontPageLook({ db, clock });
   const design = createDesign({ db, clock });
   const appName = createAppName({ db, clock });
+  const outcomes = createOutcomes({ db, clock });
   const feedback = createFeedback({ db, clock, mailer, to: feedbackTo, record: moderation.record });
 
   /** Forgets a browser the push service says is gone. */
   const forgetSubscription = (endpoint: string) => db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, endpoint));
+
+  /** Candidates as a User sees them: marked where they wrote one or hold its Upvote, and with nothing about who else wrote any. */
+  async function withMyMarks(userId: string, shown: Promise<(Candidate & { submitterId: string })[]>): Promise<MyCandidate[]> {
+    const [candidates, upvote] = await Promise.all([shown, feelings.myUpvote(userId)]);
+    return candidates.map(({ submitterId, ...candidate }) => ({ ...candidate, mine: submitterId === userId, hasMyUpvote: candidate.id === upvote?.feelingId }));
+  }
+
+  /** Candidates as anyone browsing sees them: nothing about who wrote them. */
+  const withoutSubmitters = async (shown: Promise<(Candidate & { submitterId: string })[]>): Promise<Candidate[]> =>
+    (await shown).map(({ submitterId: _submitter, ...candidate }) => candidate);
 
   /** The Admin area, with everything done there recorded against the Admin who did it. */
   const adminFor = (adminId: string): Admin => ({
@@ -229,10 +246,9 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
           return submitted;
         },
         myFeelings: () => feelings.mine(userId),
-        async candidates(input) {
-          const [shown, upvote] = await Promise.all([feelings.candidates(input), feelings.myUpvote(userId)]);
-          return shown.map(({ submitterId, ...candidate }) => ({ ...candidate, mine: submitterId === userId, hasMyUpvote: candidate.id === upvote?.feelingId }));
-        },
+        candidates: (input) => withMyMarks(userId, feelings.candidates(input)),
+        oneByOne: (polarity) => withMyMarks(userId, feelings.oneByOne(polarity)),
+        yesterdaysYahLah: () => outcomes.yahLah(userId),
         upvote: (feelingId) => feelings.upvote(userId, feelingId),
         undoUpvote: () => feelings.undoUpvote(userId),
         myUpvote: () => feelings.myUpvote(userId),
@@ -291,9 +307,10 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
     wordCloud: (polarity: Polarity): Promise<CloudWord[]> => feelings.wordCloud(polarity),
 
     /** Up to 10 jumbled Candidates for a Polarity and Hashtag, with Bylines and no counts. Open to any Visitor. */
-    async candidates(input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> {
-      return (await feelings.candidates(input)).map(({ submitterId: _submitter, ...candidate }) => candidate);
-    },
+    candidates: (input: { polarity: Polarity; hashtag: string }): Promise<Candidate[]> => withoutSubmitters(feelings.candidates(input)),
+
+    /** Every Candidate of a Polarity, from every Hashtag, in the order to go through them one at a time. Open to any Visitor. */
+    oneByOne: (polarity: Polarity): Promise<Candidate[]> => withoutSubmitters(feelings.oneByOne(polarity)),
 
     /** The Hashtags of the Cycle under way, most used first, for a new Feeling to join. Open to any Visitor. */
     hashtagsInUse: (): Promise<string[]> => feelings.hashtagsInUse(),
@@ -323,7 +340,7 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
         let sent = 0;
         for (const subscription of subscriptions) {
           try {
-            await webPush.send(subscription, { title: "Approve tomorrow's Feelings", body, link: "/admin" });
+            await webPush.send(subscription, { title: "Approve tomorrow's Feelings", body, link: "/admin/approve" });
             sent++;
           } catch (error) {
             if (error instanceof PushSubscriptionGoneError) await forgetSubscription(subscription.endpoint);
@@ -348,11 +365,25 @@ export function createApp({ db, clock, singpass, webPush, mailer, feedbackTo, ra
           .update(schema.pushSubscriptions)
           .set({ lastPushedCycle: cycle })
           .where(or(isNull(schema.pushSubscriptions.lastPushedCycle), ne(schema.pushSubscriptions.lastPushedCycle, cycle)))
-          .returning({ endpoint: schema.pushSubscriptions.endpoint, p256dh: schema.pushSubscriptions.p256dh, auth: schema.pushSubscriptions.auth });
+          .returning({
+            endpoint: schema.pushSubscriptions.endpoint,
+            p256dh: schema.pushSubscriptions.p256dh,
+            auth: schema.pushSubscriptions.auth,
+            userId: schema.pushSubscriptions.userId,
+          });
+        const daily = `SG's FOTD are about ${tags.join(" and ")}`;
+        // How each User's Yah Lah did yesterday, worked out once however many browsers they have.
+        const yahLahLines = new Map<string, Promise<string | null>>();
+        const yahLahLineFor = (userId: string) => {
+          if (!yahLahLines.has(userId)) yahLahLines.set(userId, outcomes.yahLah(userId).then((outcome) => outcome?.line ?? null));
+          return yahLahLines.get(userId)!;
+        };
         let sent = 0;
-        for (const subscription of claimed) {
+        for (const { userId, ...subscription } of claimed) {
           try {
-            await webPush.send(subscription, { title: "Yah Lah", body: `SG's FOTD are about ${tags.join(" and ")}`, link: "/" });
+            const line = await yahLahLineFor(userId);
+            const body = line ? `${daily}. ${line}.` : daily;
+            await webPush.send(subscription, { title: "Yah Lah", body, link: "/" });
             sent++;
           } catch (error) {
             if (error instanceof PushSubscriptionGoneError) await forgetSubscription(subscription.endpoint);

@@ -2,12 +2,13 @@
 
 import { CircleAlert } from "lucide-react";
 import { startTransition, useActionState, type FormEvent, type ReactNode } from "react";
+import type { Cycle } from "@/core/cycle";
 import { Button } from "@/ui/buttons";
 import { FeelingFields } from "@/ui/feeling-fields";
 import { submitFeelingAction } from "./actions";
 
 /** `reminder` is the note on what becomes public, shown above the button at every submission. */
-export function SubmitForm({ hashtagsInUse, reminder }: { hashtagsInUse: string[]; reminder: ReactNode }) {
+export function SubmitForm({ hashtagsInUse, promptDay, reminder }: { hashtagsInUse: string[]; promptDay: Cycle; reminder: ReactNode }) {
   const [state, send, busy] = useActionState(submitFeelingAction, {});
   // Sent by hand, not as the form's own action: the browser would clear the fields after every try, even a refused one.
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -17,7 +18,7 @@ export function SubmitForm({ hashtagsInUse, reminder }: { hashtagsInUse: string[
   }
   return (
     <form onSubmit={submit} className="stack">
-      <FeelingFields hashtagsInUse={hashtagsInUse} />
+      <FeelingFields hashtagsInUse={hashtagsInUse} promptDay={promptDay} />
       {state.message && (
         <p className="problem" role="alert">
           <CircleAlert aria-hidden="true" size={18} /> {state.message}

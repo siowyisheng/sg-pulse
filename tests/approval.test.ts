@@ -34,3 +34,16 @@ describe("from a Feeling to the Feeling of the Day", () => {
     expect((await writer.me.myFeelings())[0]?.state).toBe("winner");
   });
 });
+
+describe("the evening reminder", () => {
+  it("takes the Admin straight to the page for approving in one tap", async () => {
+    const world = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    await (await world.signUp({ subject: "s-1", name: "TAN AH KOW", dateOfBirth: "1990-05-01", sex: "M" })).me.submitFeeling({ text: "Got a seat", polarity: "good", hashtag: "mrt" });
+    await (await world.signUpAdmin({ subject: "s-admin", name: "SIOW YI SHENG", dateOfBirth: "1988-02-03", sex: "M" })).me.subscribeToPush({ endpoint: "https://push.example/a", p256dh: "key", auth: "auth" });
+
+    world.clock.set("2026-11-12T22:00:00+08:00");
+    await world.app.operator.sendApprovalReminder();
+
+    expect(world.webPush.sent[0]?.payload.link).toBe("/admin/approve");
+  });
+});

@@ -28,7 +28,7 @@ export default async function Submit() {
               <QueuedForTomorrowChip /> It&apos;s past 9pm, so this one joins tomorrow&apos;s Feelings. Nobody sees it until then.
             </p>
           )}
-          <SubmitForm hashtagsInUse={hashtagsInUse} reminder={<ConsentReminder byline={me.byline} />} />
+          <SubmitForm hashtagsInUse={hashtagsInUse} promptDay={submission.cycle} reminder={<ConsentReminder byline={me.byline} />} />
         </Card>
       ) : (
         <Card className="stack">

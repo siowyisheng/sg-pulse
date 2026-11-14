@@ -2,7 +2,7 @@ import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, sq
 import type { Db } from "@/db";
 import { schema } from "@/db";
 import { bylineOf, type Byline } from "./byline";
-import { byRank, CANDIDATES_SHOWN, mixOf, RISING_HALF_LIFE_HOURS } from "./candidate-mix";
+import { byRank, CANDIDATES_SHOWN, jumbled, mixOf, RISING_HALF_LIFE_HOURS, withStanding, type Standing } from "./candidate-mix";
 import { cycleOf, isCycle, nextCycle, submissionCycleOf, type Cycle } from "./cycle";
 import { ApprovalError, FeelingError, UpvoteError } from "./errors";
 import { normalisedHashtag, refuseLinks, validPolarity, validText, type Polarity } from "./feeling-rules";
@@ -119,6 +119,8 @@ export interface Candidate {
   polarity: Polarity;
   hashtag: string;
   byline: Byline;
+  /** Why it was put in front of this person, when that is worth saying (see candidate-mix.ts). */
+  standing?: Standing;
 }
 
 /** A Candidate as a signed-in User sees it: with their own marks, and still nothing about anyone else's. */
@@ -228,6 +230,12 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
       .groupBy(schema.feelings.id, schema.users.id)
       // A steady order to start from, so a jumble depends on the dice alone.
       .orderBy(asc(schema.feelings.createdAt), asc(schema.feelings.id));
+  }
+
+  /** A Candidate as it is shown: nothing of its Upvotes; only a Rising or New one says why it was picked. */
+  function shown(candidate: Awaited<ReturnType<typeof candidatesWithUpvotes>>[number] & { standing?: Standing }, now: Date): Candidate & { submitterId: string } {
+    const { id, text, polarity, hashtag, submitter, standing } = candidate;
+    return { id, text, polarity, hashtag, byline: bylineOf(submitter, now), submitterId: submitter.id, ...(standing ? { standing } : {}) };
   }
 
   /** The top three of a Polarity right now: most Upvotes, ties to the earliest written. */
@@ -511,8 +519,19 @@ export function createFeelings({ db, clock, random }: { db: Db; clock: Clock; ra
       }
       const now = clock.now();
       const all = await candidatesWithUpvotes(now, input.polarity, hashtag);
-      // What comes out says nothing of Upvotes, or of why a Candidate was picked.
-      return mixOf(all, now, random).map(({ id, text, polarity, submitter }) => ({ id, text, polarity, hashtag, byline: bylineOf(submitter, now), submitterId: submitter.id }));
+      return mixOf(all, now, random).map((candidate) => shown(candidate, now));
+    },
+
+    /**
+     * Every Candidate of a Polarity in the Cycle under way, from every Hashtag, to go through one at a
+     * time: all of them, in one jumble, so the order says nothing about Upvotes. Each is marked Rising
+     * or New by the same rules as a Hashtag's list when it shows them all.
+     */
+    async oneByOne(polarity: Polarity): Promise<(Candidate & { submitterId: string })[]> {
+      if (polarity !== "good" && polarity !== "bad") return [];
+      const now = clock.now();
+      const all = await candidatesWithUpvotes(now, polarity);
+      return jumbled(all, random).map((candidate) => shown(withStanding(candidate, now), now));
     },
 
     /**

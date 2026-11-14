@@ -25,3 +25,25 @@ describe("a User says Yah Lah to a Candidate", () => {
     expect(await me.myUpvote()).toBeNull();
   });
 });
+
+describe("going through a Polarity's Candidates one by one", () => {
+  it("brings every Candidate of that mood from every Hashtag, with the User's own marks, for them to Yah Lah or skip", async () => {
+    const world = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    const person = (n: number) => ({ subject: `o-${n}`, name: "TAN AH KOW", dateOfBirth: "1990-05-01", sex: "M" });
+    const reader = await world.signUp(person(0));
+    await reader.me.submitFeeling({ text: "My own good one", polarity: "good", hashtag: "kopi" });
+    const seat = await (await world.signUp(person(1))).me.submitFeeling({ text: "Got a seat", polarity: "good", hashtag: "mrt" });
+    await (await world.signUp(person(2))).me.submitFeeling({ text: "Prata was crispy", polarity: "good", hashtag: "hawker" });
+    await (await world.signUp(person(3))).me.submitFeeling({ text: "Train broke down", polarity: "bad", hashtag: "mrt" });
+
+    await reader.me.upvote(seat.id);
+    const stack = await reader.me.oneByOne("good");
+
+    expect(stack.map(({ text, hashtag, mine, hasMyUpvote }) => ({ text, hashtag, mine, hasMyUpvote })).sort((a, b) => a.text.localeCompare(b.text))).toEqual([
+      { text: "Got a seat", hashtag: "mrt", mine: false, hasMyUpvote: true },
+      { text: "My own good one", hashtag: "kopi", mine: true, hasMyUpvote: false },
+      { text: "Prata was crispy", hashtag: "hawker", mine: false, hasMyUpvote: false },
+    ]);
+    expect((await world.app.oneByOne("good")).map((candidate) => candidate.text).sort()).toEqual(["Got a seat", "My own good one", "Prata was crispy"]);
+  });
+});

@@ -1,5 +1,6 @@
-import { Check, Clock, Frown, Hourglass, Repeat, Smile, Users } from "lucide-react";
+import { Check, Clock, Frown, Hourglass, Repeat, Smile, Sprout, TrendingUp, Users } from "lucide-react";
 import type { ReactNode } from "react";
+import type { Standing } from "@/core/candidate-mix";
 import type { Polarity } from "@/core/feeling-rules";
 import { Emoji, POLARITY_EMOJI } from "./emoji";
 
@@ -86,6 +87,23 @@ export function YourYahLahChip() {
       <Check aria-hidden="true" size={14} />
       <Emoji char="🙌" />
       Your Yah Lah
+    </span>
+  );
+}
+
+/** Why a Candidate is in the list: a burst of recent Upvotes, or hardly any yet. Never a count. */
+export function StandingChip({ standing }: { standing: Standing }) {
+  return standing === "rising" ? (
+    <span className="chip chip-neutral has-emoji">
+      <TrendingUp aria-hidden="true" size={14} />
+      <Emoji char="🔥" />
+      Rising
+    </span>
+  ) : (
+    <span className="chip chip-neutral has-emoji">
+      <Sprout aria-hidden="true" size={14} />
+      <Emoji char="🌱" />
+      New
     </span>
   );
 }

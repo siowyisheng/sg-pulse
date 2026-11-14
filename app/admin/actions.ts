@@ -36,8 +36,8 @@ export async function unscheduleSeedFeelingAction(cycle: string, polarity: Polar
   revalidatePath("/admin");
 }
 
-/** Approves one of the top three; a problem (it has dropped out of the three, say) shows on the page after it reloads. */
-export async function approveAction(feelingId: string): Promise<void> {
+/** Approves one of the top three; a problem (it has dropped out of the three, say) shows on the page, `back`, after it reloads. */
+export async function approveAction(feelingId: string, back: "/admin" | "/admin/approve" = "/admin"): Promise<void> {
   const me = await currentMe();
   if (!me?.isAdmin) return;
   let missed = false;
@@ -48,14 +48,15 @@ export async function approveAction(feelingId: string): Promise<void> {
     missed = true;
   }
   // Only a code goes in the address, never words.
-  redirect(missed ? "/admin?problem=NOT_A_CHOICE" : "/admin");
+  redirect(missed ? `${back}?problem=NOT_A_CHOICE` : back);
 }
 
-export async function withdrawApprovalAction(polarity: Polarity): Promise<void> {
+export async function withdrawApprovalAction(polarity: Polarity, back: "/admin" | "/admin/approve" = "/admin"): Promise<void> {
   const me = await currentMe();
   if (!me?.isAdmin) return;
   await me.asAdmin().withdrawApproval(polarity);
   revalidatePath("/admin");
+  revalidatePath(back);
 }
 
 /** Clears a Report as innocent; `timeoutDays` 0 lets the reporter off. */

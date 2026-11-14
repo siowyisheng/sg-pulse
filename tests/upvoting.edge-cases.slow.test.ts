@@ -142,10 +142,30 @@ describe("counts stay hidden", () => {
 
     expect(await app.wordCloud("good")).toEqual(before.cloud);
     expect(Object.keys((await app.candidates({ polarity: "good", hashtag: "a" }))[0]!).sort()).toEqual(before.keys);
-    expect(before.keys).toEqual(["byline", "hashtag", "id", "polarity", "text"]);
+    // Standing (Rising or New) is the one thing Upvotes may move, and it is never a count.
+    expect(before.keys).toEqual(["byline", "hashtag", "id", "polarity", "standing", "text"]);
     // A User sees only their own mark, never anyone else's or a total.
     const third = await signUp(person(102));
     expect((await third.me.candidates({ polarity: "good", hashtag: "a" }))[0]).toMatchObject({ hasMyUpvote: false, mine: false });
-    expect(Object.keys((await third.me.candidates({ polarity: "good", hashtag: "a" }))[0]!).sort()).toEqual(["byline", "hasMyUpvote", "hashtag", "id", "mine", "polarity", "text"]);
+    expect(Object.keys((await third.me.candidates({ polarity: "good", hashtag: "a" }))[0]!).sort()).toEqual(["byline", "hasMyUpvote", "hashtag", "id", "mine", "polarity", "standing", "text"]);
+  });
+});
+
+describe("one by one, at the edges", () => {
+  it("brings all of a Polarity's Candidates even past the 10 a Hashtag list shows, each once, and drops one that is Reported", async () => {
+    const world = await createTestApp({ now: "2026-11-12T09:00:00+08:00" });
+    const someone = (n: number) => ({ subject: `e-${n}`, name: "TAN AH KOW", dateOfBirth: "1990-05-01", sex: "M" });
+    const ids: string[] = [];
+    for (let n = 0; n < 12; n++) ids.push((await (await world.signUp(someone(n))).me.submitFeeling({ text: `Good ${n}`, polarity: "good", hashtag: n % 2 ? "kopi" : "mrt" })).id);
+
+    const all = await world.app.oneByOne("good");
+    expect(all).toHaveLength(12);
+    expect(new Set(all.map((candidate) => candidate.id)).size).toBe(12);
+    // One jumble: wherever it falls, a Candidate with no Upvotes yet is New, so position says nothing.
+    expect(all.every((candidate) => candidate.standing === "new")).toBe(true);
+
+    await (await world.signUp(someone(99))).me.report(ids[0]!);
+    expect((await world.app.oneByOne("good")).map((candidate) => candidate.id)).not.toContain(ids[0]);
+    expect(await world.app.oneByOne("bad")).toEqual([]);
   });
 });

@@ -100,7 +100,7 @@ describe("the 10 Candidates shown when a Hashtag has more", () => {
     }
   });
 
-  it("give nothing away: always jumbled, with no hint of why a Candidate is there", async () => {
+  it("give nothing away: always jumbled, never a count, and no Standing on one picked for its Upvotes", async () => {
     const world = await worldWith([...named("Top", 5), ...named("Fresh", 9)]);
     for (const text of named("Top", 5)) await world.vote(text, 3);
     world.clock.set("2026-11-12T20:00:00+08:00");
@@ -111,8 +111,9 @@ describe("the 10 Candidates shown when a Hashtag has more", () => {
     const positions = SEEDS.map(async (seed) => (await world.shown(seed)).indexOf("Top1"));
     expect(new Set(await Promise.all(positions)).size).toBeGreaterThan(2);
     world.random.seed(1);
-    const [candidate] = await world.app.candidates({ polarity: "good", hashtag: "tag" });
-    expect(Object.keys(candidate!).sort()).toEqual(["byline", "hashtag", "id", "polarity", "text"]);
+    const shown = await world.app.candidates({ polarity: "good", hashtag: "tag" });
+    for (const candidate of shown) expect(Object.keys(candidate).filter((key) => key !== "standing").sort()).toEqual(["byline", "hashtag", "id", "polarity", "text"]);
+    expect(shown.filter((candidate) => candidate.text.startsWith("Top")).every((candidate) => candidate.standing === undefined)).toBe(true);
   });
 
   it("do not count a second Yah Lah from the same User on the same Candidate as a fresh one", async () => {
@@ -129,5 +130,30 @@ describe("the 10 Candidates shown when a Hashtag has more", () => {
     expect(await world.tally()).toMatchObject({ Pumped: 4 });
     // One late Upvote out of four doesn't make it Rising, so it stays behind the ten with more.
     for (const seed of SEEDS) expect(await world.shown(seed)).not.toContain("Pumped");
+  });
+});
+
+describe("the Standing a mix shows", () => {
+  it("gives none to Candidates picked for their Upvotes, Rising to those picked as Rising and New to those picked as New", async () => {
+    const world = await createTestApp({ now: "2026-11-12T01:00:00+08:00" });
+    const writers = await Promise.all(Array.from({ length: 13 }, (_, n) => world.signUp({ subject: `w-${n}`, name: "TAN AH KOW", dateOfBirth: "1990-05-01", sex: "M" })));
+    const ids: string[] = [];
+    for (const [n, { me }] of writers.entries()) ids.push((await me.submitFeeling({ text: `Feeling ${n}`, polarity: "good", hashtag: "mrt" })).id);
+    let upvoters = 0;
+    const upvote = async (feelingId: string, times: number) => {
+      for (let i = 0; i < times; i++) await (await world.signUp({ subject: `v-${upvoters++}`, name: "LIM MEI LING", dateOfBirth: "1985-03-03", sex: "F" })).me.upvote(feelingId);
+    };
+    // Five long-standing favourites, then later two with a burst of Upvotes; the rest have none.
+    for (const id of ids.slice(0, 5)) await upvote(id, 4);
+    world.clock.set("2026-11-12T15:00:00+08:00");
+    for (const id of ids.slice(5, 7)) await upvote(id, 2);
+
+    const shown = await world.app.candidates({ polarity: "good", hashtag: "mrt" });
+    const standingOf = (index: number) => shown.find((candidate) => candidate.id === ids[index])?.standing;
+
+    expect(shown).toHaveLength(10);
+    for (let i = 0; i < 5; i++) expect(standingOf(i)).toBeUndefined();
+    expect([standingOf(5), standingOf(6)]).toEqual(["rising", "rising"]);
+    expect(shown.filter((candidate) => ids.indexOf(candidate.id) >= 7).every((candidate) => candidate.standing === "new")).toBe(true);
   });
 });

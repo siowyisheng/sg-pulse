@@ -151,7 +151,8 @@ describe("Approval", () => {
     const [candidate] = await world.app.candidates({ polarity: "good", hashtag: "tag" });
     await (await world.signUpAdmin(ADMIN)).me.asAdmin().approve(candidate!.id);
     expect((await writer.me.myFeelings())[0]?.state).toBe("candidate");
-    expect(Object.keys((await world.app.candidates({ polarity: "good", hashtag: "tag" }))[0]!).sort()).toEqual(["byline", "hashtag", "id", "polarity", "text"]);
+    // Its Standing ("new") says it has hardly any Upvotes; nothing says it was approved.
+    expect(Object.keys((await world.app.candidates({ polarity: "good", hashtag: "tag" }))[0]!).sort()).toEqual(["byline", "hashtag", "id", "polarity", "standing", "text"]);
   });
 
   it("is for Admins only", async () => {
@@ -247,7 +248,7 @@ describe("the Admin's reminder", () => {
 
     expect(await world.app.operator.sendApprovalReminder()).toEqual({ sent: 2 });
     expect(world.webPush.sent.map((push) => push.subscription.endpoint).sort()).toEqual(["https://push.example/1", "https://push.example/2"]);
-    expect(world.webPush.sent[0]?.payload).toEqual({ title: "Approve tomorrow's Feelings", body: "The Bad Feeling still needs your Approval before midnight.", link: "/admin" });
+    expect(world.webPush.sent[0]?.payload).toEqual({ title: "Approve tomorrow's Feelings", body: "The Bad Feeling still needs your Approval before midnight.", link: "/admin/approve" });
   });
 
   it("is not sent when everything with Candidates is approved, or when there is nothing to approve", async () => {

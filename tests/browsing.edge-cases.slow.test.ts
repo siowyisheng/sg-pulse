@@ -107,7 +107,9 @@ describe("the Candidates under a Hashtag", () => {
     const { app, signUp } = await createTestApp({ now: NOW });
     await (await signUp({ subject: "s-teen", name: "LIM WEI JIE", dateOfBirth: "2010-01-20", sex: "M" })).me.submitFeeling({ text: "Exams are over", polarity: "good", hashtag: "school" });
     const [candidate] = await app.candidates({ polarity: "good", hashtag: "school" });
-    expect(Object.keys(candidate!).sort()).toEqual(["byline", "hashtag", "id", "polarity", "text"]);
+    // "New" says it has hardly any Upvotes yet, which is why it is shown: never a count.
+    expect(Object.keys(candidate!).sort()).toEqual(["byline", "hashtag", "id", "polarity", "standing", "text"]);
+    expect(candidate!.standing).toBe("new");
     expect(candidate!.byline).toEqual({ initials: null, sex: "M", ageBand: "<18" });
   });
 });

@@ -216,6 +216,24 @@ ui_components:
       background: "#FFF6E0"
       text: "#12131A"
       icon: "Hourglass"
+    rising:
+      background: "#F2F2F4"
+      text: "#12131A"
+      icon: "TrendingUp"
+      emoji: "🔥"
+      use: "On a Rising Candidate. Never a count."
+    new:
+      background: "#F2F2F4"
+      text: "#12131A"
+      icon: "Sprout"
+      emoji: "🌱"
+      use: "On a New Candidate."
+    hashtag_in_use:
+      background: "#FFFFFF"
+      border: "1.5px #8F92A1"
+      text: "#12131A"
+      chosen: { background: "#E4E7ED", border: "#1D3B66", text: "#1D3B66" }
+      use: "Today's Hashtags under the Hashtag field, to tap instead of typing. At least the touch target tall."
   card:
     background: "#FFFFFF"
     radius: "16px"

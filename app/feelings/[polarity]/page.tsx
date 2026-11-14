@@ -5,7 +5,7 @@ import { getApp } from "@/composition";
 import { PolarityBadge } from "@/ui/badges";
 import { Card } from "@/ui/card";
 import { POLARITY_LABEL, polarityFrom } from "@/web/polarity";
-import { HashtagLabel } from "@/ui/emoji";
+import { Emoji, HashtagLabel } from "@/ui/emoji";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,11 @@ export default async function WordCloud({ params }: Props) {
         </Card>
       ) : (
         <>
-          <p className="muted">Pick a Hashtag. The bigger it is, the more Feelings are about it.</p>
+          <a className="button button-secondary" href={`/feelings/${polarity}/one-by-one`}>
+            <Emoji char="👉" />
+            Go through them one by one
+          </a>
+          <p className="muted">Or pick a Hashtag. The bigger it is, the more Feelings are about it.</p>
           <Card as="section" aria-label="Hashtags">
             <ul className="cloud">
               {cloud.map((word) => (
